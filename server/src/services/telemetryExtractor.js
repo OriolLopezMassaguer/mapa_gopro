@@ -1,22 +1,118 @@
 import fs from 'fs';
+import { createRequire } from 'module';
 import gpmfExtract from 'gpmf-extract';
 import goproTelemetry from 'gopro-telemetry';
 import exifr from 'exifr';
+
+const require = createRequire(import.meta.url);
+
+const TWO_GIB = 2 * 1024 * 1024 * 1024;
+
+/**
+ * Extract GPMF data from large files (>2 GiB) using mp4box directly in chunks.
+ */
+function extractGpmfChunked(filePath) {
+  const MP4Box = require('mp4box');
+  return new Promise((resolve, reject) => {
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const chunkSize = 2 * 1024 * 1024; // 2 MB chunks
+
+    const mp4boxFile = MP4Box.createFile();
+    let trackId = null;
+    let nb_samples = 0;
+    const timing = {};
+    let offset = 0;
+
+    mp4boxFile.onError = reject;
+
+    mp4boxFile.onReady = function (videoData) {
+      let foundVideo = false;
+      for (const track of videoData.tracks) {
+        if (track.codec === 'gpmd') {
+          trackId = track.id;
+          nb_samples = track.nb_samples;
+          timing.start = track.created;
+          timing.start.setMinutes(timing.start.getMinutes() + timing.start.getTimezoneOffset());
+        } else if (
+          !foundVideo &&
+          (track.type === 'video' || track.name === 'VideoHandler' || track.track_height > 0)
+        ) {
+          if (track.type === 'video') foundVideo = true;
+          timing.videoDuration = track.movie_duration / track.movie_timescale;
+          timing.frameDuration = timing.videoDuration / track.nb_samples;
+        }
+      }
+      if (trackId != null) {
+        mp4boxFile.setExtractionOptions(trackId, null, { nbSamples: nb_samples });
+        mp4boxFile.start();
+      } else {
+        resolve(null);
+      }
+    };
+
+    const rawDataArr = [];
+    mp4boxFile.onSamples = function (id, user, samples) {
+      for (const sample of samples) {
+        rawDataArr.push(sample.data);
+      }
+      // Combine all raw data
+      const totalLen = rawDataArr.reduce((s, b) => s + b.byteLength, 0);
+      const rawData = new Uint8Array(totalLen);
+      let off = 0;
+      for (const buf of rawDataArr) {
+        rawData.set(new Uint8Array(buf), off);
+        off += buf.byteLength;
+      }
+      resolve({ rawData: rawData.buffer, timing });
+    };
+
+    // Read file in chunks and feed to mp4box
+    const fd = fs.openSync(filePath, 'r');
+    function readNextChunk() {
+      if (offset >= fileSize) {
+        fs.closeSync(fd);
+        mp4boxFile.flush();
+        // If no GPMF track was found, resolve null
+        if (trackId == null) resolve(null);
+        return;
+      }
+      const end = Math.min(offset + chunkSize, fileSize);
+      const buf = Buffer.alloc(end - offset);
+      fs.readSync(fd, buf, 0, buf.length, offset);
+
+      const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+      ab.fileStart = offset;
+      offset = mp4boxFile.appendBuffer(ab);
+      // Use setImmediate to avoid stack overflow for many chunks
+      setImmediate(readNextChunk);
+    }
+
+    readNextChunk();
+  });
+}
 
 /**
  * Extract GPS telemetry from a GoPro video (GPMF format).
  */
 export async function extractVideoTelemetry(filePath) {
-  const fileBuffer = fs.readFileSync(filePath);
+  const stat = fs.statSync(filePath);
+  let extracted;
 
-  const extracted = await gpmfExtract(fileBuffer);
+  if (stat.size >= TWO_GIB) {
+    // Use chunked reading for large files
+    extracted = await extractGpmfChunked(filePath);
+  } else {
+    const fileBuffer = fs.readFileSync(filePath);
+    extracted = await gpmfExtract(fileBuffer);
+  }
 
   if (!extracted || !extracted.rawData) {
     return null;
   }
 
   const telemetry = await goproTelemetry(extracted, {
-    stream: ['GPS5'],
+    stream: ['GPS5', 'GPS9'],
     repeatHeaders: true,
     GPSFix: 2,
     GPSPrecision: 500,
@@ -29,20 +125,40 @@ export async function extractVideoTelemetry(filePath) {
   const streams = telemetry[deviceId]?.streams;
   if (!streams) return null;
 
-  const gpsStream = streams.GPS5 || streams[Object.keys(streams).find(k => k.includes('GPS'))];
+  const gpsStream = streams.GPS5 || streams.GPS9 || streams[Object.keys(streams).find(k => k.includes('GPS'))];
   if (!gpsStream?.samples?.length) return null;
 
   const coordinates = gpsStream.samples
-    .filter(s => s.value && s.value.length >= 2)
-    .map(sample => ({
-      lat: sample.value[0],
-      lon: sample.value[1],
-      alt: sample.value[2] || 0,
-      speed2d: sample.value[3] || 0,
-      speed3d: sample.value[4] || 0,
-      cts: sample.cts || 0,
-      date: sample.date || null,
-    }));
+    .filter(s => {
+      // Support both named properties (repeatHeaders: true) and value arrays
+      if (s.value && s.value.length >= 2) return true;
+      if (s['GPS (Lat.) [deg]'] != null && s['GPS (Long.) [deg]'] != null) return true;
+      return false;
+    })
+    .map(sample => {
+      // Named properties format (repeatHeaders: true)
+      if (sample['GPS (Lat.) [deg]'] != null) {
+        return {
+          lat: sample['GPS (Lat.) [deg]'],
+          lon: sample['GPS (Long.) [deg]'],
+          alt: sample['GPS (Alt.) [m]'] || 0,
+          speed2d: sample['GPS (2D speed) [m/s]'] || 0,
+          speed3d: sample['GPS (3D speed) [m/s]'] || 0,
+          cts: sample.cts || 0,
+          date: sample.date || null,
+        };
+      }
+      // Value array format
+      return {
+        lat: sample.value[0],
+        lon: sample.value[1],
+        alt: sample.value[2] || 0,
+        speed2d: sample.value[3] || 0,
+        speed3d: sample.value[4] || 0,
+        cts: sample.cts || 0,
+        date: sample.date || null,
+      };
+    });
 
   if (coordinates.length === 0) return null;
 
@@ -63,7 +179,8 @@ export async function extractPhotoGps(filePath) {
   try {
     const exif = await exifr.parse(filePath, {
       gps: true,
-      pick: ['latitude', 'longitude', 'GPSAltitude', 'DateTimeOriginal', 'CreateDate', 'ImageWidth', 'ImageHeight'],
+      tiff: true,
+      exif: true,
     });
 
     if (!exif || exif.latitude == null || exif.longitude == null) {

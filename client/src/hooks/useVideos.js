@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { fetchMedia } from '../services/api';
 
-export function useMedia() {
-  const [media, setMedia] = useState([]);
+export function useVideos() {
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -12,7 +12,7 @@ export function useMedia() {
     fetchMedia()
       .then(data => {
         if (!cancelled) {
-          setMedia(data);
+          setVideos(data);
           setLoading(false);
         }
       })
@@ -26,5 +26,5 @@ export function useMedia() {
     return () => { cancelled = true; };
   }, []);
 
-  return { media, loading, error };
+  return { videos, loading, error };
 }
