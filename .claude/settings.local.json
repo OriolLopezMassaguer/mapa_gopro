@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"dir C:\\\\Users\\\\oriol_f2xq6oo\\\\mapa_gopro /s\")",
+      "Bash(cmd /c \"echo Directory exists && dir\")",
+      "Bash(cmd /c:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(where:*)",
+      "Bash(npm install:*)",
+      "Bash(echo:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}
