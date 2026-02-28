@@ -6,23 +6,24 @@ import exifr from 'exifr';
 
 const require = createRequire(import.meta.url);
 
-const TWO_GIB = 2 * 1024 * 1024 * 1024;
+const CHUNKED_THRESHOLD = 500 * 1024 * 1024; // 500 MB — use chunked reading for large files
 
 /**
- * Extract GPMF data from large files (>2 GiB) using mp4box directly in chunks.
+ * Extract GPMF data from large files (>500 MB) using mp4box directly in chunks.
  */
 function extractGpmfChunked(filePath) {
   const MP4Box = require('mp4box');
   return new Promise((resolve, reject) => {
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
-    const chunkSize = 2 * 1024 * 1024; // 2 MB chunks
+    const chunkSize = 64 * 1024 * 1024; // 64 MB chunks — fewer iterations than 2 MB
 
     const mp4boxFile = MP4Box.createFile();
     let trackId = null;
     let nb_samples = 0;
     const timing = {};
     let offset = 0;
+    let done = false;
 
     mp4boxFile.onError = reject;
 
@@ -52,11 +53,18 @@ function extractGpmfChunked(filePath) {
     };
 
     const rawDataArr = [];
+    const timingSamples = [];
     mp4boxFile.onSamples = function (id, user, samples) {
       for (const sample of samples) {
         rawDataArr.push(sample.data);
+        timingSamples.push({ cts: sample.cts, duration: sample.duration });
       }
-      // Combine all raw data
+      // Wait until all expected samples have arrived before resolving
+      if (nb_samples > 0 && rawDataArr.length < nb_samples) return;
+
+      done = true;
+      timing.samples = timingSamples;
+
       const totalLen = rawDataArr.reduce((s, b) => s + b.byteLength, 0);
       const rawData = new Uint8Array(totalLen);
       let off = 0;
@@ -64,17 +72,37 @@ function extractGpmfChunked(filePath) {
         rawData.set(new Uint8Array(buf), off);
         off += buf.byteLength;
       }
-      resolve({ rawData: rawData.buffer, timing });
+      resolve({ rawData, timing });
     };
+
+    function resolveFromAccumulated() {
+      if (rawDataArr.length > 0) {
+        timing.samples = timingSamples;
+        const totalLen = rawDataArr.reduce((s, b) => s + b.byteLength, 0);
+        const rawData = new Uint8Array(totalLen);
+        let off = 0;
+        for (const buf of rawDataArr) {
+          rawData.set(new Uint8Array(buf), off);
+          off += buf.byteLength;
+        }
+        resolve({ rawData, timing });
+      } else {
+        resolve(null);
+      }
+    }
 
     // Read file in chunks and feed to mp4box
     const fd = fs.openSync(filePath, 'r');
     function readNextChunk() {
+      // Stop immediately if onSamples already resolved the promise
+      if (done) {
+        try { fs.closeSync(fd); } catch {}
+        return;
+      }
       if (offset >= fileSize) {
-        fs.closeSync(fd);
+        try { fs.closeSync(fd); } catch {}
         mp4boxFile.flush();
-        // If no GPMF track was found, resolve null
-        if (trackId == null) resolve(null);
+        if (!done) resolveFromAccumulated();
         return;
       }
       const end = Math.min(offset + chunkSize, fileSize);
@@ -84,8 +112,13 @@ function extractGpmfChunked(filePath) {
       const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
       ab.fileStart = offset;
       offset = mp4boxFile.appendBuffer(ab);
-      // Use setImmediate to avoid stack overflow for many chunks
-      setImmediate(readNextChunk);
+
+      // onSamples may have fired synchronously inside appendBuffer
+      if (!done) {
+        setImmediate(readNextChunk);
+      } else {
+        try { fs.closeSync(fd); } catch {}
+      }
     }
 
     readNextChunk();
@@ -99,11 +132,11 @@ export async function extractVideoTelemetry(filePath) {
   const stat = fs.statSync(filePath);
   let extracted;
 
-  if (stat.size >= TWO_GIB) {
+  if (stat.size >= CHUNKED_THRESHOLD) {
     // Use chunked reading for large files
     extracted = await extractGpmfChunked(filePath);
   } else {
-    const fileBuffer = fs.readFileSync(filePath);
+    const fileBuffer = await fs.promises.readFile(filePath);
     extracted = await gpmfExtract(fileBuffer);
   }
 
@@ -114,7 +147,6 @@ export async function extractVideoTelemetry(filePath) {
   const telemetry = await goproTelemetry(extracted, {
     stream: ['GPS5', 'GPS9'],
     repeatHeaders: true,
-    GPSFix: 2,
     GPSPrecision: 500,
     groupTimes: 1000,
   });

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import path from 'path';
-import { getMediaItems, getVideoTelemetry, getMediaFilePath, getMediaType, getThumbnailPath } from '../services/cacheManager.js';
+import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getVideoTelemetry, getMediaFilePath, getMediaType, getThumbnailPath } from '../services/cacheManager.js';
+import { generateKml } from '../services/kmlExporter.js';
 import { streamVideo } from '../services/videoStreamer.js';
 
 const router = Router();
@@ -9,6 +10,38 @@ const router = Router();
 router.get('/', (req, res) => {
   const items = getMediaItems();
   res.json(items);
+});
+
+// GET /api/media/all — all media including items without GPS
+router.get('/all', (req, res) => {
+  res.json(getAllMediaItems());
+});
+
+// GET /api/media/export.kml — download all GPS tracks as KML
+router.get('/export.kml', (req, res) => {
+  const items = getMediaItemsForExport();
+  const kml = generateKml(items, 'all');
+  res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
+  res.setHeader('Content-Disposition', 'attachment; filename="gopro-tracks.kml"');
+  res.send(kml);
+});
+
+// GET /api/media/export-videos.kml — videos only
+router.get('/export-videos.kml', (req, res) => {
+  const items = getMediaItemsForExport();
+  const kml = generateKml(items, 'video');
+  res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
+  res.setHeader('Content-Disposition', 'attachment; filename="gopro-video-tracks.kml"');
+  res.send(kml);
+});
+
+// GET /api/media/export-photos.kml — photos only
+router.get('/export-photos.kml', (req, res) => {
+  const items = getMediaItemsForExport();
+  const kml = generateKml(items, 'photo');
+  res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
+  res.setHeader('Content-Disposition', 'attachment; filename="gopro-photos.kml"');
+  res.send(kml);
 });
 
 // GET /api/media/:id/telemetry — GPS track for a video

@@ -86,9 +86,57 @@
   font-size: 14px;
 }
 
+/* Photo markers on map */
+.photo-marker {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-marker-dot {
+  width: 14px;
+  height: 14px;
+  background: #e67e22;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.photo-marker--selected {
+  z-index: 1000 !important;
+}
+
+.photo-marker-dot--selected {
+  width: 18px;
+  height: 18px;
+  background: #27ae60;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
 /* Selected marker */
 .marker-selected {
   filter: hue-rotate(120deg);
+}
+
+/* Photo viewer in panel */
+.photo-viewer {
+  padding: 16px 20px;
+}
+
+.photo-full {
+  width: 100%;
+  border-radius: 6px;
+  display: block;
+}
+
+/* Subfolder label */
+.panel-subfolder {
+  font-size: 12px;
+  color: #999;
+  font-weight: 400;
 }
 
 /* Loading overlay */
@@ -113,6 +161,176 @@
   font-size: 16px;
   color: #555;
 }
+
+/* View toggle */
+.view-toggle {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1500;
+  display: flex;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.view-btn {
+  padding: 8px 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+.view-btn:hover { background: #f5f5f5; }
+.view-btn--active { background: #2563eb; color: #fff; }
+.view-btn--active:hover { background: #1d4ed8; }
+
+/* Table view */
+.table-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  padding-top: 52px;
+}
+
+.table-toolbar {
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.export-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.export-btn {
+  padding: 6px 14px;
+  background: #16a34a;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.export-btn:hover { background: #15803d; }
+.export-btn--video { background: #2563eb; }
+.export-btn--video:hover { background: #1d4ed8; }
+.export-btn--photo { background: #d97706; }
+.export-btn--photo:hover { background: #b45309; }
+
+.table-filters {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-btn {
+  padding: 5px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-btn:hover { background: #f3f4f6; }
+
+.filter-btn--active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.filter-count {
+  background: rgba(0,0,0,0.12);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.filter-btn--active .filter-count { background: rgba(255,255,255,0.25); }
+
+.table-scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+.table-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+.media-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.media-table thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-bottom: 2px solid #e5e7eb;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.media-table thead th:hover { background: #f9fafb; }
+.media-table thead th.sorted { color: #2563eb; }
+.sort-arrow { font-size: 11px; }
+
+.media-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.media-table tbody tr:hover { background: #f0f4ff; }
+.media-table tbody tr.row--nogps { color: #9ca3af; }
+.media-table tbody tr.row--nogps:hover { background: #fafafa; }
+
+.media-table td {
+  padding: 7px 12px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.col-thumb { width: 60px; padding: 4px 8px !important; }
+
+.thumb {
+  width: 52px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+}
+
+.cell--na { color: #d1d5db; }
+.na { font-style: italic; }
 
 /* Error / empty banners */
 .error-banner,

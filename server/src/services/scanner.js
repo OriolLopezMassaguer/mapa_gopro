@@ -15,6 +15,9 @@ function scanRecursive(dir, results) {
   }
 
   for (const entry of entries) {
+    // Skip hidden files and Synology system directories/files
+    if (entry.startsWith('.')) continue;
+
     const filepath = path.join(dir, entry);
     let stat;
     try {

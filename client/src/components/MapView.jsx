@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { getThumbnailUrl } from '../services/api';
 

@@ -11,7 +11,10 @@
       "Bash(echo:*)",
       "Bash(powershell -Command:*)",
       "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(grep:*)",
+      "Bash(node -e:*)",
+      "Bash(find:*)"
     ]
   }
 }

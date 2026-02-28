@@ -6,6 +6,7 @@ import { extractVideoTelemetry, extractPhotoGps } from './telemetryExtractor.js'
 import { generateThumbnail } from './thumbnailGenerator.js';
 
 const mediaIndex = new Map();
+const allMediaIndex = new Map();
 
 function ensureDirs() {
   for (const dir of [config.cacheDir, config.metadataDir, config.thumbnailDir]) {
@@ -39,10 +40,19 @@ function writeCache(id, data) {
   fs.writeFileSync(cachePath, JSON.stringify(data, null, 2));
 }
 
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`Timed out after ${ms / 1000}s`)), ms)),
+  ]);
+}
+
 async function processVideo(file, prefix) {
   console.log(`${prefix} Extracting GPS from video: ${file.relativePath} (${(file.fileSize / 1e9).toFixed(2)} GB)`);
 
-  const telemetry = await extractVideoTelemetry(file.filepath);
+  // Scale timeout with file size: 120s base + 30s per GB
+  const timeoutMs = Math.max(120_000, 120_000 + Math.ceil(file.fileSize / 1e9) * 30_000);
+  const telemetry = await withTimeout(extractVideoTelemetry(file.filepath), timeoutMs);
 
   if (telemetry) {
     const entry = {
@@ -58,6 +68,7 @@ async function processVideo(file, prefix) {
     };
     writeCache(file.id, entry);
     mediaIndex.set(file.id, entry);
+    allMediaIndex.set(file.id, entry);
 
     try {
       await generateThumbnail(file.filepath, file.id);
@@ -80,6 +91,7 @@ async function processVideo(file, prefix) {
       noGps: true,
     };
     writeCache(file.id, entry);
+    allMediaIndex.set(file.id, entry);
     console.log(`  -> No GPS data`);
     return 'noGps';
   }
@@ -104,6 +116,7 @@ async function processPhoto(file, prefix) {
     };
     writeCache(file.id, entry);
     mediaIndex.set(file.id, entry);
+    allMediaIndex.set(file.id, entry);
     console.log(`  -> GPS: ${gps.startPoint.lat.toFixed(5)}, ${gps.startPoint.lon.toFixed(5)}`);
     return 'extracted';
   } else {
@@ -119,6 +132,7 @@ async function processPhoto(file, prefix) {
       noGps: true,
     };
     writeCache(file.id, entry);
+    allMediaIndex.set(file.id, entry);
     console.log(`  -> No GPS data`);
     return 'noGps';
   }
@@ -143,13 +157,19 @@ export async function initializeCache() {
     processed++;
     const prefix = `[${processed}/${mediaFiles.length}]`;
 
-    // Check cache
+    // Check cache (compare timestamps within 1s tolerance for copy/move precision loss)
     const cacheEntry = readCache(file.id);
+    const mtimeMatch = cacheEntry && Math.abs(
+      new Date(cacheEntry.lastModified).getTime() - new Date(file.lastModified).getTime()
+    ) < 1000;
     if (
       cacheEntry &&
       cacheEntry.fileSize === file.fileSize &&
-      cacheEntry.lastModified === file.lastModified
+      mtimeMatch
     ) {
+      // Update filepath in case VIDEO_DIR changed
+      cacheEntry.filepath = file.filepath;
+      allMediaIndex.set(file.id, cacheEntry);
       if (!cacheEntry.noGps) {
         mediaIndex.set(file.id, cacheEntry);
       }
@@ -168,6 +188,21 @@ export async function initializeCache() {
       else noGps++;
     } catch (err) {
       console.error(`${prefix} Error processing ${file.relativePath}: ${err.message}`);
+      // Cache the error so we don't retry on next restart
+      const entry = {
+        id: file.id,
+        filename: file.filename,
+        filepath: file.filepath,
+        relativePath: file.relativePath,
+        subfolder: file.subfolder,
+        fileSize: file.fileSize,
+        lastModified: file.lastModified,
+        type: file.type,
+        noGps: true,
+        error: err.message,
+      };
+      writeCache(file.id, entry);
+      allMediaIndex.set(file.id, entry);
       errors++;
     }
   }
@@ -196,6 +231,38 @@ export function getMediaItems() {
         ? fs.existsSync(path.join(config.thumbnailDir, `${v.id}.jpg`))
         : true, // Photos are their own thumbnails
     }));
+}
+
+export function getMediaItemsForExport() {
+  // Returns full entries including coordinates, for KML/GPX export
+  return Array.from(allMediaIndex.values())
+    .filter(v => !v.noGps && v.startPoint)
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+}
+
+export function getAllMediaItems() {
+  return Array.from(allMediaIndex.values())
+    .map(v => ({
+      id: v.id,
+      filename: v.filename,
+      subfolder: v.subfolder,
+      relativePath: v.relativePath,
+      type: v.type,
+      fileSize: v.fileSize,
+      lastModified: v.lastModified,
+      noGps: v.noGps || false,
+      error: v.error || null,
+      startPoint: v.startPoint || null,
+      endPoint: v.endPoint || null,
+      startDate: v.startDate || null,
+      duration: v.duration || null,
+      totalPoints: v.totalPoints || null,
+      altitude: v.altitude || null,
+      hasThumbnail: v.type === 'video'
+        ? fs.existsSync(path.join(config.thumbnailDir, `${v.id}.jpg`))
+        : !v.noGps,
+    }))
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
 }
 
 export function getVideoTelemetry(id) {

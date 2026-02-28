@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import MapView from './components/MapView';
 import VideoPanel from './components/VideoPanel';
+import TableView from './components/TableView';
 import { useVideos } from './hooks/useVideos';
 import { useTelemetry } from './hooks/useTelemetry';
 import './App.css';
@@ -9,9 +10,11 @@ function App() {
   const { videos, loading, error } = useVideos();
   const [selectedVideo, setSelectedVideo] = useState(null);
   const { track, loading: trackLoading } = useTelemetry(selectedVideo?.id);
+  const [view, setView] = useState('map'); // 'map' | 'table'
 
   const handleSelectVideo = (video) => {
     setSelectedVideo(video);
+    setView('map');
   };
 
   const handleClose = () => {
@@ -20,16 +23,37 @@ function App() {
 
   return (
     <div className="app">
-      <MapView
-        videos={videos}
-        selectedVideo={selectedVideo}
-        track={track}
-        onSelectVideo={handleSelectVideo}
-      />
+      <div className="view-toggle">
+        <button
+          className={`view-btn${view === 'map' ? ' view-btn--active' : ''}`}
+          onClick={() => setView('map')}
+        >
+          Map
+        </button>
+        <button
+          className={`view-btn${view === 'table' ? ' view-btn--active' : ''}`}
+          onClick={() => setView('table')}
+        >
+          Table
+        </button>
+      </div>
 
-      {selectedVideo && (
+      {view === 'map' && (
+        <MapView
+          mediaItems={videos}
+          selectedItem={selectedVideo}
+          track={track}
+          onSelectItem={handleSelectVideo}
+        />
+      )}
+
+      {view === 'table' && (
+        <TableView onSelectItem={handleSelectVideo} />
+      )}
+
+      {view === 'map' && selectedVideo && (
         <VideoPanel
-          video={selectedVideo}
+          item={selectedVideo}
           track={track}
           trackLoading={trackLoading}
           onClose={handleClose}
@@ -48,7 +72,7 @@ function App() {
         </div>
       )}
 
-      {!loading && videos.length === 0 && !error && (
+      {!loading && videos.length === 0 && !error && view === 'map' && (
         <div className="empty-banner">
           No GoPro videos with GPS data found.
         </div>
