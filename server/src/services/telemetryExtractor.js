@@ -111,7 +111,10 @@ function extractGpmfChunked(filePath) {
 
       const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
       ab.fileStart = offset;
-      offset = mp4boxFile.appendBuffer(ab);
+      mp4boxFile.appendBuffer(ab);
+      // Always advance by what we actually read — do NOT use appendBuffer's return value,
+      // which can jump over the mdat atom and skip all the sample data.
+      offset = end;
 
       // onSamples may have fired synchronously inside appendBuffer
       if (!done) {
