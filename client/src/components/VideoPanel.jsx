@@ -1,6 +1,7 @@
 import VideoPlayer from './VideoPlayer';
 import { getThumbnailUrl, getStreamUrl } from '../services/api';
 
+
 function formatDuration(ms) {
   if (!ms) return '--';
   const secs = Math.floor(ms / 1000);
@@ -22,7 +23,19 @@ export default function MediaPanel({ item, track, trackLoading, onClose }) {
             <span className="panel-subfolder">{item.subfolder}</span>
           )}
         </div>
-        <button className="close-btn" onClick={onClose}>&times;</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isVideo && (
+            <a
+              href={getStreamUrl(item.id)}
+              download={item.filename}
+              className="panel-download-btn"
+              title="Download video"
+            >
+              ↓
+            </a>
+          )}
+          <button className="close-btn" onClick={onClose}>&times;</button>
+        </div>
       </div>
 
       {isVideo && <VideoPlayer videoId={item.id} />}
