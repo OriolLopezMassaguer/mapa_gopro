@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import VideoPanel from './components/VideoPanel';
 import TableView from './components/TableView';
 import { useVideos } from './hooks/useVideos';
 import { useTelemetry } from './hooks/useTelemetry';
+import { fetchAllTracks } from './services/api';
 import './App.css';
 
 function App() {
   const { videos, loading, error } = useVideos();
   const [selectedVideo, setSelectedVideo] = useState(null);
   const { track, loading: trackLoading } = useTelemetry(selectedVideo?.id);
+  const [allTracks, setAllTracks] = useState([]);
+
+  useEffect(() => {
+    fetchAllTracks().then(setAllTracks).catch(() => {});
+  }, []);
   const [view, setView] = useState('map'); // 'map' | 'table'
 
   const handleSelectVideo = (video) => {
@@ -43,6 +49,7 @@ function App() {
           mediaItems={videos}
           selectedItem={selectedVideo}
           track={track}
+          allTracks={allTracks}
           onSelectItem={handleSelectVideo}
         />
       )}

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import path from 'path';
-import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getVideoTelemetry, getMediaFilePath, getMediaType, getThumbnailPath } from '../services/cacheManager.js';
+import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getAllVideoTracks, getVideoTelemetry, getMediaFilePath, getMediaType, getThumbnailPath } from '../services/cacheManager.js';
 import { generateKml } from '../services/kmlExporter.js';
 import { streamVideo } from '../services/videoStreamer.js';
 
@@ -42,6 +42,11 @@ router.get('/export-photos.kml', (req, res) => {
   res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
   res.setHeader('Content-Disposition', 'attachment; filename="gopro-photos.kml"');
   res.send(kml);
+});
+
+// GET /api/media/tracks — all video GPS tracks (downsampled for map overview)
+router.get('/tracks', (req, res) => {
+  res.json(getAllVideoTracks());
 });
 
 // GET /api/media/:id/telemetry — GPS track for a video

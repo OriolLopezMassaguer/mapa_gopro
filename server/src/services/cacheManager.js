@@ -265,6 +265,18 @@ export function getAllMediaItems() {
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
 }
 
+export function getAllVideoTracks() {
+  return Array.from(mediaIndex.values())
+    .filter(v => !v.noGps && v.type === 'video' && v.coordinates?.length > 0)
+    .map(v => {
+      // Downsample to max 200 points for overview display
+      const coords = v.coordinates;
+      const step = Math.max(1, Math.floor(coords.length / 200));
+      const sampled = coords.filter((_, i) => i % step === 0 || i === coords.length - 1);
+      return { id: v.id, coordinates: sampled.map(c => ({ lat: c.lat, lon: c.lon })) };
+    });
+}
+
 export function getVideoTelemetry(id) {
   const entry = mediaIndex.get(id);
   if (!entry || entry.noGps || entry.type !== 'video') return null;

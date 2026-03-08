@@ -85,7 +85,7 @@ function FitBounds({ track, selectedItem, mediaItems }) {
   return null;
 }
 
-export default function MapView({ mediaItems, selectedItem, track, onSelectItem }) {
+export default function MapView({ mediaItems, selectedItem, track, allTracks, onSelectItem }) {
   const defaultCenter = [45.9, 6.9];
 
   return (
@@ -96,6 +96,24 @@ export default function MapView({ mediaItems, selectedItem, track, onSelectItem 
       />
 
       <FitBounds track={track} selectedItem={selectedItem} mediaItems={mediaItems} />
+
+      {allTracks.map(t => (
+        <Polyline
+          key={t.id}
+          positions={t.coordinates.map(c => [c.lat, c.lon])}
+          pathOptions={
+            selectedItem?.id === t.id
+              ? { color: '#e74c3c', weight: 4, opacity: 0.9 }
+              : { color: '#2563eb', weight: 2.5, opacity: 0.55 }
+          }
+          eventHandlers={{
+            click: () => {
+              const item = mediaItems.find(v => v.id === t.id);
+              if (item) onSelectItem(item);
+            }
+          }}
+        />
+      ))}
 
       {mediaItems.map(item => (
         <Marker
@@ -129,10 +147,10 @@ export default function MapView({ mediaItems, selectedItem, track, onSelectItem 
         </Marker>
       ))}
 
-      {track?.coordinates && (
+      {track?.coordinates && !allTracks.some(t => t.id === selectedItem?.id) && (
         <Polyline
           positions={track.coordinates.map(c => [c.lat, c.lon])}
-          pathOptions={{ color: '#e74c3c', weight: 4, opacity: 0.85 }}
+          pathOptions={{ color: '#e74c3c', weight: 4, opacity: 0.9 }}
         />
       )}
     </MapContainer>
