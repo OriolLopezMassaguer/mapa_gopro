@@ -7,6 +7,55 @@ import exifr from 'exifr';
 const require = createRequire(import.meta.url);
 
 const CHUNKED_THRESHOLD = 500 * 1024 * 1024; // 500 MB — use chunked reading for large files
+const IMPOSSIBLE_SPEED_MS = 200; // m/s = 720 km/h — impossible for any ground/air GoPro use
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Remove GPS points reachable only via impossible speed (GPS teleport glitch).
+ * Splits the track into segments at each impossible jump, then returns the first
+ * segment with more than 3 points — which handles both:
+ *   - GPS losing lock mid-recording (correct first segment, wrong tail)
+ *   - Cold-start stale position (1–3 wrong initial points, correct rest)
+ */
+function filterGpsOutliers(coordinates) {
+  if (coordinates.length <= 3) return coordinates;
+
+  const jumpIndices = [];
+  for (let i = 1; i < coordinates.length; i++) {
+    const dt = (coordinates[i].cts - coordinates[i - 1].cts) / 1000;
+    if (dt < 0.1) continue;
+    const dist = haversineDistance(
+      coordinates[i - 1].lat, coordinates[i - 1].lon,
+      coordinates[i].lat, coordinates[i].lon
+    );
+    if (dist / dt > IMPOSSIBLE_SPEED_MS) jumpIndices.push(i);
+  }
+
+  if (jumpIndices.length === 0) return coordinates;
+
+  // Split into segments at jump boundaries
+  const segments = [];
+  let start = 0;
+  for (const idx of jumpIndices) {
+    if (idx > start) segments.push(coordinates.slice(start, idx));
+    start = idx;
+  }
+  segments.push(coordinates.slice(start));
+
+  // Return first segment with > 3 points (skips cold-start stale noise at the beginning)
+  for (const seg of segments) {
+    if (seg.length > 3) return seg;
+  }
+  // Fallback: longest segment
+  return segments.reduce((best, seg) => seg.length > best.length ? seg : best, segments[0]);
+}
 
 /**
  * Extract GPMF data from large files (>500 MB) using mp4box directly in chunks.
@@ -197,13 +246,15 @@ export async function extractVideoTelemetry(filePath) {
 
   if (coordinates.length === 0) return null;
 
+  const filtered = filterGpsOutliers(coordinates);
+
   return {
-    startPoint: { lat: coordinates[0].lat, lon: coordinates[0].lon },
-    endPoint: { lat: coordinates[coordinates.length - 1].lat, lon: coordinates[coordinates.length - 1].lon },
-    coordinates,
-    duration: coordinates[coordinates.length - 1].cts,
-    totalPoints: coordinates.length,
-    startDate: coordinates[0].date,
+    startPoint: { lat: filtered[0].lat, lon: filtered[0].lon },
+    endPoint: { lat: filtered[filtered.length - 1].lat, lon: filtered[filtered.length - 1].lon },
+    coordinates: filtered,
+    duration: filtered[filtered.length - 1].cts,
+    totalPoints: filtered.length,
+    startDate: filtered[0].date,
   };
 }
 
