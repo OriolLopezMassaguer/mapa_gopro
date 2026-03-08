@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Rectangle, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
@@ -16,51 +16,63 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Video marker (blue)
-const videoIcon = new L.Icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+function getItemYear(item) {
+  return item.startDate ? new Date(item.startDate).getFullYear() : null;
+}
 
-// Photo marker (orange circle)
-const photoIcon = new L.DivIcon({
-  className: 'photo-marker',
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-  popupAnchor: [0, -12],
-  html: '<div class="photo-marker-dot"></div>',
-});
+function getColor(item, yearColorMap) {
+  const year = getItemYear(item);
+  return (year && yearColorMap[year]) || '#6b7280';
+}
 
-// Selected marker (green)
-const selectedVideoIcon = new L.Icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-  className: 'marker-selected',
-});
+function createVideoIcon(color, isSelected) {
+  const s = isSelected ? 28 : 24;
+  const stroke = isSelected ? 'white' : 'rgba(255,255,255,0.85)';
+  const sw = isSelected ? 2.5 : 1.5;
+  return new L.DivIcon({
+    className: '',
+    iconSize: [s, s + 12],
+    iconAnchor: [s / 2, s + 12],
+    popupAnchor: [0, -(s + 14)],
+    html: `<svg width="${s}" height="${s + 12}" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 1C6.477 1 2 5.477 2 11c0 7.5 10 23 10 23s10-15.5 10-23C22 5.477 17.523 1 12 1z" fill="${color}" stroke="${stroke}" stroke-width="${sw}"/>
+      <circle cx="12" cy="11" r="4.5" fill="white" fill-opacity="0.55"/>
+    </svg>`,
+  });
+}
 
-const selectedPhotoIcon = new L.DivIcon({
-  className: 'photo-marker photo-marker--selected',
-  iconSize: [22, 22],
-  iconAnchor: [11, 11],
-  popupAnchor: [0, -14],
-  html: '<div class="photo-marker-dot photo-marker-dot--selected"></div>',
-});
+function createPhotoIcon(color, isSelected) {
+  const size = isSelected ? 18 : 14;
+  const border = isSelected ? 3 : 2;
+  const total = size + border * 2;
+  return new L.DivIcon({
+    className: '',
+    iconSize: [total, total],
+    iconAnchor: [total / 2, total / 2],
+    popupAnchor: [0, -(total / 2 + 4)],
+    html: `<div style="width:${size}px;height:${size}px;background:${color};border:${border}px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,
+  });
+}
 
-function getIcon(item, isSelected) {
-  if (item.type === 'photo') {
-    return isSelected ? selectedPhotoIcon : photoIcon;
-  }
-  return isSelected ? selectedVideoIcon : videoIcon;
+function createVideoEndIcon(color, isSelected) {
+  const op = isSelected ? 1 : 0.85;
+  const sw = isSelected ? 3 : 2.5;
+  return new L.DivIcon({
+    className: '',
+    iconSize: [16, 22],
+    iconAnchor: [3, 21],
+    popupAnchor: [7, -22],
+    html: `<svg width="16" height="22" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg">
+      <line x1="3" y1="1" x2="3" y2="21" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" opacity="${op}"/>
+      <path d="M3 2 L14 6 L3 13 Z" fill="${color}" stroke="white" stroke-width="1.5" stroke-linejoin="round" opacity="${op}"/>
+    </svg>`,
+  });
+}
+
+function getIcon(item, isSelected, yearColorMap) {
+  const color = getColor(item, yearColorMap);
+  if (item.type === 'photo') return createPhotoIcon(color, isSelected);
+  return createVideoIcon(color, isSelected);
 }
 
 function FitBounds({ track, selectedItem, mediaItems }) {
@@ -85,74 +97,140 @@ function FitBounds({ track, selectedItem, mediaItems }) {
   return null;
 }
 
-export default function MapView({ mediaItems, selectedItem, track, allTracks, onSelectItem }) {
+export default function MapView({ mediaItems, selectedItem, track, allTracks, onSelectItem, yearColorMap = {}, regions = [], filterRegion = null }) {
   const defaultCenter = [45.9, 6.9];
 
+  // Only show tracks for items currently visible
+  const visibleIds = new Set(mediaItems.map(i => i.id));
+  const filteredTracks = allTracks.filter(t => visibleIds.has(t.id));
+
+  // Unique years in current mediaItems for legend
+  const legendYears = [...new Set(
+    mediaItems.filter(i => i.startDate).map(i => new Date(i.startDate).getFullYear())
+  )].sort();
+
   return (
-    <MapContainer center={defaultCenter} zoom={10} className="map-container">
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <MapContainer center={defaultCenter} zoom={10} className="map-container">
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-      <FitBounds track={track} selectedItem={selectedItem} mediaItems={mediaItems} />
+        <FitBounds track={track} selectedItem={selectedItem} mediaItems={mediaItems} />
 
-      {allTracks.map(t => (
-        <Polyline
-          key={t.id}
-          positions={t.coordinates.map(c => [c.lat, c.lon])}
-          pathOptions={
-            selectedItem?.id === t.id
-              ? { color: '#e74c3c', weight: 4, opacity: 0.9 }
-              : { color: '#2563eb', weight: 2.5, opacity: 0.55 }
-          }
-          eventHandlers={{
-            click: () => {
-              const item = mediaItems.find(v => v.id === t.id);
-              if (item) onSelectItem(item);
+        {regions.map(r => {
+          const isActive = filterRegion === r.id;
+          return (
+            <Rectangle
+              key={r.id}
+              bounds={[[r.minLat, r.minLon], [r.maxLat, r.maxLon]]}
+              pathOptions={isActive
+                ? { color: '#374151', weight: 2, fillColor: '#374151', fillOpacity: 0.08, dashArray: null }
+                : { color: '#9ca3af', weight: 1.5, fillColor: '#6b7280', fillOpacity: 0.04, dashArray: '6 4' }
+              }
+            >
+              <Tooltip sticky>{r.name}</Tooltip>
+            </Rectangle>
+          );
+        })}
+
+        {filteredTracks.map(t => (
+          <Polyline
+            key={t.id}
+            positions={t.coordinates.map(c => [c.lat, c.lon])}
+            pathOptions={
+              selectedItem?.id === t.id
+                ? { color: '#e74c3c', weight: 4, opacity: 0.9 }
+                : (() => {
+                    const item = mediaItems.find(v => v.id === t.id);
+                    const color = item ? getColor(item, yearColorMap) : '#2563eb';
+                    return { color, weight: 2.5, opacity: 0.55 };
+                  })()
             }
-          }}
-        />
-      ))}
+            eventHandlers={{
+              click: () => {
+                const item = mediaItems.find(v => v.id === t.id);
+                if (item) onSelectItem(item);
+              }
+            }}
+          />
+        ))}
 
-      {mediaItems.map(item => (
-        <Marker
-          key={item.id}
-          position={[item.startPoint.lat, item.startPoint.lon]}
-          icon={getIcon(item, selectedItem?.id === item.id)}
-          eventHandlers={{ click: () => onSelectItem(item) }}
-        >
-          <Popup>
-            <div style={{ textAlign: 'center', maxWidth: 220 }}>
-              {item.hasThumbnail && (
-                <img
-                  src={getThumbnailUrl(item.id)}
-                  alt={item.filename}
-                  style={{ width: 200, borderRadius: 4, marginBottom: 4 }}
-                  loading="lazy"
-                />
-              )}
-              <div><strong>{item.filename}</strong></div>
-              <div style={{ fontSize: 11, color: '#888' }}>
-                {item.type === 'video' ? '🎬 Video' : '📷 Photo'}
-                {item.subfolder ? ` — ${item.subfolder}` : ''}
-              </div>
-              {item.startDate && (
-                <div style={{ fontSize: 12, color: '#666' }}>
-                  {new Date(item.startDate).toLocaleString()}
+        {mediaItems.map(item => (
+          <Marker
+            key={item.id}
+            position={[item.startPoint.lat, item.startPoint.lon]}
+            icon={getIcon(item, selectedItem?.id === item.id, yearColorMap)}
+            eventHandlers={{ click: () => onSelectItem(item) }}
+          >
+            <Popup>
+              <div style={{ textAlign: 'center', maxWidth: 220 }}>
+                {item.hasThumbnail && (
+                  <img
+                    src={getThumbnailUrl(item.id)}
+                    alt={item.filename}
+                    style={{ width: 200, borderRadius: 4, marginBottom: 4 }}
+                    loading="lazy"
+                  />
+                )}
+                <div><strong>{item.filename}</strong></div>
+                <div style={{ fontSize: 11, color: '#888' }}>
+                  {item.type === 'video' ? '🎬 Video' : '📷 Photo'}
+                  {item.subfolder ? ` — ${item.subfolder}` : ''}
                 </div>
-              )}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+                {item.startDate && (
+                  <div style={{ fontSize: 12, color: '#666' }}>
+                    {new Date(item.startDate).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
-      {track?.coordinates && !allTracks.some(t => t.id === selectedItem?.id) && (
-        <Polyline
-          positions={track.coordinates.map(c => [c.lat, c.lon])}
-          pathOptions={{ color: '#e74c3c', weight: 4, opacity: 0.9 }}
-        />
+        {mediaItems.filter(item => item.type === 'video' && item.endPoint).map(item => (
+          <Marker
+            key={`end-${item.id}`}
+            position={[item.endPoint.lat, item.endPoint.lon]}
+            icon={createVideoEndIcon(getColor(item, yearColorMap), selectedItem?.id === item.id)}
+            eventHandlers={{ click: () => onSelectItem(item) }}
+          >
+            <Popup>
+              <div style={{ textAlign: 'center', maxWidth: 200 }}>
+                <div><strong>{item.filename}</strong></div>
+                <div style={{ fontSize: 11, color: '#888' }}>🏁 End point</div>
+                {item.startDate && (
+                  <div style={{ fontSize: 12, color: '#666' }}>
+                    {new Date(item.startDate).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {track?.coordinates && !filteredTracks.some(t => t.id === selectedItem?.id) && (
+          <Polyline
+            positions={track.coordinates.map(c => [c.lat, c.lon])}
+            pathOptions={{ color: '#e74c3c', weight: 4, opacity: 0.9 }}
+          />
+        )}
+      </MapContainer>
+
+      {legendYears.length > 1 && (
+        <div className="map-year-legend">
+          {legendYears.map(year => (
+            <div key={year} className="legend-item">
+              <svg width="12" height="17" viewBox="0 0 24 36" style={{ flexShrink: 0 }}>
+                <path d="M12 1C6.477 1 2 5.477 2 11c0 7.5 10 23 10 23s10-15.5 10-23C22 5.477 17.523 1 12 1z"
+                  fill={yearColorMap[year] || '#6b7280'} stroke="white" strokeWidth="1.5" />
+              </svg>
+              <span>{year}</span>
+            </div>
+          ))}
+        </div>
       )}
-    </MapContainer>
+    </div>
   );
 }

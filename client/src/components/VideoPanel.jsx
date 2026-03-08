@@ -1,5 +1,5 @@
 import VideoPlayer from './VideoPlayer';
-import { getThumbnailUrl, getStreamUrl } from '../services/api';
+import { getThumbnailUrl, getStreamUrl, getKmlUrl } from '../services/api';
 
 
 function formatDuration(ms) {
@@ -24,6 +24,17 @@ export default function MediaPanel({ item, track, trackLoading, onClose }) {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {!item.noGps && (
+            <a
+              href={getKmlUrl(item.id)}
+              download
+              className="panel-download-btn"
+              title="Download KML"
+              style={{ fontSize: 12, fontWeight: 700 }}
+            >
+              KML
+            </a>
+          )}
           {isVideo && (
             <a
               href={getStreamUrl(item.id)}

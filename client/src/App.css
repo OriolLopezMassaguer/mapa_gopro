@@ -242,6 +242,15 @@
   padding-top: 52px;
 }
 
+.table-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 6px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
 .table-toolbar {
   padding: 10px 16px;
   background: #fff;
@@ -373,6 +382,126 @@
 
 .cell--na { color: #d1d5db; }
 .na { font-style: italic; }
+
+/* Year filter bar */
+.year-filter-bar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.year-filter-years,
+.year-filter-months {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(4px);
+  border-radius: 10px;
+  padding: 6px 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.year-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: #f3f4f6;
+  color: #374151;
+  transition: all 0.15s;
+}
+
+.year-pill:hover { background: #e5e7eb; }
+
+.year-pill--active {
+  color: #fff;
+}
+
+.year-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.year-pill--active .year-pill-dot {
+  background: rgba(255,255,255,0.6) !important;
+}
+
+.month-pill {
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  transition: all 0.15s;
+}
+
+.month-pill:hover { background: #f3f4f6; }
+
+.month-pill--active {
+  color: #fff;
+}
+
+.region-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  transition: all 0.15s;
+}
+
+.region-pill:hover { background: #f3f4f6; }
+
+.region-pill--active {
+  background: #374151;
+  border-color: #374151;
+  color: #fff;
+}
+
+/* Year legend on map */
+.map-year-legend {
+  position: absolute;
+  bottom: 28px;
+  left: 12px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+}
 
 /* Error / empty banners */
 .error-banner,

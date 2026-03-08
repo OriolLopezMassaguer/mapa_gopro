@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { fetchAllMedia, getThumbnailUrl } from '../services/api';
+import { REGIONS, MONTH_NAMES, inRegion } from '../constants';
 
 const COLUMNS = [
   { key: 'filename',    label: 'File' },
@@ -70,12 +71,17 @@ function sortValue(item, key) {
   }
 }
 
-export default function TableView({ onSelectItem }) {
+export default function TableView({
+  onSelectItem,
+  filterYear, filterMonth, filterDay, filterRegion,
+  onFilterYear, onFilterMonth, onFilterDay, onFilterRegion,
+  yearColorMap = {},
+}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState('startDate');
   const [sortAsc, setSortAsc] = useState(false);
-  const [filter, setFilter] = useState('all'); // all | video | photo | nogps
+  const [typeFilter, setTypeFilter] = useState('all'); // all | video | photo | nogps
 
   useEffect(() => {
     fetchAllMedia()
@@ -88,12 +94,55 @@ export default function TableView({ onSelectItem }) {
     else { setSortKey(key); setSortAsc(true); }
   }
 
-  const filtered = items.filter(item => {
-    if (filter === 'video') return item.type === 'video';
-    if (filter === 'photo') return item.type === 'photo';
-    if (filter === 'nogps') return item.noGps;
-    return true;
-  });
+  const activeRegion = filterRegion ? REGIONS.find(r => r.id === filterRegion) : null;
+
+  const availableYears = useMemo(() => {
+    const years = new Set(items.filter(v => v.startDate).map(v => new Date(v.startDate).getFullYear()));
+    return [...years].sort();
+  }, [items]);
+
+  const availableMonths = useMemo(() => {
+    if (!filterYear) return [];
+    const months = new Set(
+      items.filter(v => v.startDate && new Date(v.startDate).getFullYear() === filterYear)
+        .map(v => new Date(v.startDate).getMonth() + 1)
+    );
+    return [...months].sort((a, b) => a - b);
+  }, [items, filterYear]);
+
+  const availableDays = useMemo(() => {
+    if (!filterYear || !filterMonth) return [];
+    const days = new Set(
+      items.filter(v => {
+        if (!v.startDate) return false;
+        const d = new Date(v.startDate);
+        return d.getFullYear() === filterYear && d.getMonth() + 1 === filterMonth;
+      }).map(v => new Date(v.startDate).getDate())
+    );
+    return [...days].sort((a, b) => a - b);
+  }, [items, filterYear, filterMonth]);
+
+  const filtered = useMemo(() => {
+    return items.filter(item => {
+      if (typeFilter === 'video' && item.type !== 'video') return false;
+      if (typeFilter === 'photo' && item.type !== 'photo') return false;
+      if (typeFilter === 'nogps' && !item.noGps) return false;
+      if (activeRegion && !inRegion(item, activeRegion)) return false;
+      if (filterYear) {
+        if (!item.startDate) return false;
+        if (new Date(item.startDate).getFullYear() !== filterYear) return false;
+      }
+      if (filterMonth) {
+        if (!item.startDate) return false;
+        if (new Date(item.startDate).getMonth() + 1 !== filterMonth) return false;
+      }
+      if (filterDay) {
+        if (!item.startDate) return false;
+        if (new Date(item.startDate).getDate() !== filterDay) return false;
+      }
+      return true;
+    });
+  }, [items, typeFilter, activeRegion, filterYear, filterMonth, filterDay]);
 
   const sorted = [...filtered].sort((a, b) => {
     const av = sortValue(a, sortKey);
@@ -117,8 +166,8 @@ export default function TableView({ onSelectItem }) {
           {['all', 'video', 'photo', 'nogps'].map(f => (
             <button
               key={f}
-              className={`filter-btn${filter === f ? ' filter-btn--active' : ''}`}
-              onClick={() => setFilter(f)}
+              className={`filter-btn${typeFilter === f ? ' filter-btn--active' : ''}`}
+              onClick={() => setTypeFilter(f)}
             >
               {f === 'nogps' ? 'No GPS' : f.charAt(0).toUpperCase() + f.slice(1)}
               <span className="filter-count">{counts[f]}</span>
@@ -137,6 +186,70 @@ export default function TableView({ onSelectItem }) {
           </a>
         </div>
       </div>
+
+      {/* Region filter */}
+      <div className="table-filter-row">
+        {REGIONS.map(r => (
+          <button
+            key={r.id}
+            className={`region-pill${filterRegion === r.id ? ' region-pill--active' : ''}`}
+            onClick={() => onFilterRegion(r.id)}
+          >
+            {r.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Year filter */}
+      {availableYears.length > 0 && (
+        <div className="table-filter-row">
+          {availableYears.map(year => (
+            <button
+              key={year}
+              className={`year-pill${filterYear === year ? ' year-pill--active' : ''}`}
+              style={filterYear === year
+                ? { background: yearColorMap[year], borderColor: yearColorMap[year] }
+                : { borderColor: yearColorMap[year] }}
+              onClick={() => onFilterYear(year)}
+            >
+              <span className="year-pill-dot" style={{ background: yearColorMap[year] }}></span>
+              {year}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Month filter */}
+      {filterYear && availableMonths.length > 1 && (
+        <div className="table-filter-row">
+          {availableMonths.map(m => (
+            <button
+              key={m}
+              className={`month-pill${filterMonth === m ? ' month-pill--active' : ''}`}
+              style={filterMonth === m ? { background: yearColorMap[filterYear], borderColor: yearColorMap[filterYear] } : {}}
+              onClick={() => onFilterMonth(m)}
+            >
+              {MONTH_NAMES[m - 1]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Day filter */}
+      {filterMonth && availableDays.length > 1 && (
+        <div className="table-filter-row">
+          {availableDays.map(d => (
+            <button
+              key={d}
+              className={`month-pill${filterDay === d ? ' month-pill--active' : ''}`}
+              style={filterDay === d ? { background: yearColorMap[filterYear], borderColor: yearColorMap[filterYear] } : {}}
+              onClick={() => onFilterDay(d)}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="table-empty">Loading...</div>

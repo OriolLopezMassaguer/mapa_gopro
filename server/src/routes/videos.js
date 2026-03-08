@@ -49,6 +49,17 @@ router.get('/tracks', (req, res) => {
   res.json(getAllVideoTracks());
 });
 
+// GET /api/media/:id/export.kml — KML for a single media item
+router.get('/:id/export.kml', (req, res) => {
+  const items = getMediaItemsForExport().filter(i => i.id === req.params.id);
+  if (items.length === 0) return res.status(404).json({ error: 'Item not found or has no GPS' });
+  const kml = generateKml(items, 'all');
+  const name = items[0].filename.replace(/\.[^.]+$/, '') + '.kml';
+  res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
+  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  res.send(kml);
+});
+
 // GET /api/media/:id/telemetry — GPS track for a video
 router.get('/:id/telemetry', (req, res) => {
   const telemetry = getVideoTelemetry(req.params.id);

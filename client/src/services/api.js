@@ -8,3 +8,4 @@ export const fetchTelemetry = (id) => api.get(`/media/${id}/telemetry`).then(r =
 export const fetchAllTracks = () => api.get('/media/tracks').then(r => r.data);
 export const getStreamUrl = (id) => `/api/media/${id}/stream`;
 export const getThumbnailUrl = (id) => `/api/media/${id}/thumbnail`;
+export const getKmlUrl = (id) => `/api/media/${id}/export.kml`;
