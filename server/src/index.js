@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
 import mediaRoutes from './routes/videos.js';
+import passesRoutes from './routes/passes.js';
 import { initializeCache } from './services/cacheManager.js';
 
 // Prevent process crashes from killing the server
@@ -21,6 +22,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/media', mediaRoutes);
+app.use('/api/passes', passesRoutes);
 
 // In production, serve the built React app
 if (process.env.NODE_ENV === 'production') {

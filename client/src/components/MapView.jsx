@@ -75,6 +75,21 @@ function getIcon(item, isSelected, yearColorMap) {
   return createVideoIcon(color, isSelected);
 }
 
+function createPassIcon() {
+  return new L.DivIcon({
+    className: '',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+    popupAnchor: [0, -12],
+    html: `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="10,1 19,18 1,18" fill="#7c3aed" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="10" y1="7" x2="10" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+  });
+}
+
+const PASS_ICON = createPassIcon();
+
 function FitBounds({ track, selectedItem, mediaItems }) {
   const map = useMap();
 
@@ -97,7 +112,7 @@ function FitBounds({ track, selectedItem, mediaItems }) {
   return null;
 }
 
-export default function MapView({ mediaItems, selectedItem, track, allTracks, onSelectItem, yearColorMap = {}, regions = [], filterRegion = null }) {
+export default function MapView({ mediaItems, selectedItem, track, allTracks, onSelectItem, yearColorMap = {}, regions = [], filterRegion = null, passWaypoints = [] }) {
   const defaultCenter = [45.9, 6.9];
 
   // Only show tracks for items currently visible
@@ -216,6 +231,21 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
             pathOptions={{ color: '#e74c3c', weight: 4, opacity: 0.9 }}
           />
         )}
+
+        {passWaypoints.map((w, i) => (
+          <Marker
+            key={`pass-${w.source}-${i}`}
+            position={[w.lat, w.lon]}
+            icon={PASS_ICON}
+          >
+            <Popup>
+              <div style={{ textAlign: 'center' }}>
+                <strong>{w.name}</strong>
+                {w.ele != null && <div style={{ fontSize: 12, color: '#666' }}>{w.ele} m</div>}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
 
       {legendYears.length > 1 && (

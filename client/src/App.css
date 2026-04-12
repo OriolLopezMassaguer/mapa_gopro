@@ -207,7 +207,7 @@
 /* View toggle */
 .view-toggle {
   position: absolute;
-  top: 12px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1500;
@@ -456,6 +456,29 @@
   color: #fff;
 }
 
+.pass-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #7c3aed;
+  background: #fff;
+  color: #7c3aed;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.pass-toggle:hover { background: #f5f3ff; }
+
+.pass-toggle--active {
+  background: #7c3aed;
+  color: #fff;
+}
+
 .region-pill {
   display: inline-flex;
   align-items: center;
@@ -476,6 +499,19 @@
   background: #374151;
   border-color: #374151;
   color: #fff;
+}
+
+.zone-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  margin: 1px 2px 1px 0;
+  white-space: nowrap;
 }
 
 /* Year legend on map */

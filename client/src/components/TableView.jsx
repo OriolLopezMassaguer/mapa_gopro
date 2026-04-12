@@ -8,6 +8,8 @@ const COLUMNS = [
   { key: 'type',        label: 'Type' },
   { key: 'fileSize',    label: 'Size' },
   { key: 'startDate',   label: 'Date' },
+  { key: 'year',        label: 'Year' },
+  { key: 'zones',       label: 'Zone' },
   { key: 'startPoint',  label: 'GPS Start' },
   { key: 'endPoint',    label: 'GPS End' },
   { key: 'duration',    label: 'Duration' },
@@ -47,6 +49,10 @@ function fmtDuration(ms) {
   return `${s}s`;
 }
 
+function getItemZones(item) {
+  return REGIONS.filter(r => inRegion(item, r));
+}
+
 function cellValue(item, key) {
   switch (key) {
     case 'fileSize':    return fmtSize(item.fileSize);
@@ -55,6 +61,8 @@ function cellValue(item, key) {
     case 'endPoint':    return item.type === 'video' ? fmtCoord(item.endPoint) : null;
     case 'duration':    return item.type === 'video' ? fmtDuration(item.duration) : null;
     case 'totalPoints': return item.type === 'video' ? (item.totalPoints ?? '—') : null;
+    case 'year':        return item.startDate ? String(new Date(item.startDate).getFullYear()) : null;
+    case 'zones':       return getItemZones(item).map(r => r.name).join(', ') || null;
     default:            return item[key] || '—';
   }
 }
@@ -67,6 +75,8 @@ function sortValue(item, key) {
     case 'endPoint':    return item.endPoint?.lat ?? -Infinity;
     case 'duration':    return item.duration ?? -1;
     case 'totalPoints': return item.totalPoints ?? -1;
+    case 'year':        return item.startDate ? new Date(item.startDate).getFullYear() : -1;
+    case 'zones':       return getItemZones(item).map(r => r.name).join(', ');
     default:            return (item[key] || '').toLowerCase();
   }
 }
@@ -189,6 +199,12 @@ export default function TableView({
 
       {/* Region filter */}
       <div className="table-filter-row">
+        <button
+          className={`region-pill${filterRegion === null ? ' region-pill--active' : ''}`}
+          onClick={() => onFilterRegion(null)}
+        >
+          All
+        </button>
         {REGIONS.map(r => (
           <button
             key={r.id}
@@ -203,6 +219,13 @@ export default function TableView({
       {/* Year filter */}
       {availableYears.length > 0 && (
         <div className="table-filter-row">
+          <button
+            className={`year-pill${filterYear === null ? ' year-pill--active' : ''}`}
+            style={filterYear === null ? { background: '#374151', borderColor: '#374151' } : {}}
+            onClick={() => { onFilterYear(null); }}
+          >
+            All
+          </button>
           {availableYears.map(year => (
             <button
               key={year}
@@ -294,6 +317,19 @@ export default function TableView({
                     )}
                   </td>
                   {COLUMNS.map(col => {
+                    if (col.key === 'zones') {
+                      const zones = getItemZones(item);
+                      return (
+                        <td key="zones">
+                          {zones.length === 0
+                            ? <span className="na">—</span>
+                            : zones.map(r => (
+                              <span key={r.id} className="zone-tag">{r.name}</span>
+                            ))
+                          }
+                        </td>
+                      );
+                    }
                     const val = cellValue(item, col.key);
                     return (
                       <td key={col.key} className={val == null ? 'cell--na' : ''}>

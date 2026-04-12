@@ -11,4 +11,5 @@ export default {
   cacheDir: path.resolve(__dirname, '../cache-data'),
   metadataDir: path.resolve(__dirname, '../cache-data/metadata'),
   thumbnailDir: path.resolve(__dirname, '../cache-data/thumbnails'),
+  passesDir: path.resolve(__dirname, '../../../passes'),
 };

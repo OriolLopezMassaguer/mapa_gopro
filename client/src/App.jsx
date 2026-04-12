@@ -4,7 +4,7 @@ import VideoPanel from './components/VideoPanel';
 import TableView from './components/TableView';
 import { useVideos } from './hooks/useVideos';
 import { useTelemetry } from './hooks/useTelemetry';
-import { fetchAllTracks } from './services/api';
+import { fetchAllTracks, fetchPassFiles, fetchPassWaypoints } from './services/api';
 import './App.css';
 import { YEAR_PALETTE, MONTH_NAMES, REGIONS, inRegion } from './constants';
 
@@ -13,6 +13,10 @@ function App() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const { track, loading: trackLoading } = useTelemetry(selectedVideo?.id);
   const [allTracks, setAllTracks] = useState([]);
+  const [passFiles, setPassFiles] = useState([]);
+  const [showPasses, setShowPasses] = useState(false);
+  const [activePassFiles, setActivePassFiles] = useState(new Set());
+  const [passWaypoints, setPassWaypoints] = useState([]); // [{name,lat,lon,ele,source}]
   const [filterYear, setFilterYear] = useState(null);
   const [filterMonth, setFilterMonth] = useState(null);
   const [filterDay, setFilterDay] = useState(null);
@@ -20,7 +24,29 @@ function App() {
 
   useEffect(() => {
     fetchAllTracks().then(setAllTracks).catch(() => {});
+    fetchPassFiles().then(setPassFiles).catch(() => {});
   }, []);
+
+  const togglePassFile = (id) => {
+    setActivePassFiles(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        fetchPassWaypoints(id)
+          .then(wpts => setPassWaypoints(all => [
+            ...all.filter(w => w.source !== id),
+            ...wpts.map(w => ({ ...w, source: id })),
+          ]))
+          .catch(() => {});
+      }
+      if (next.size === 0) setPassWaypoints([]);
+      return next;
+    });
+  };
+
+  const visiblePassWaypoints = passWaypoints.filter(w => activePassFiles.has(w.source));
   const [view, setView] = useState('map'); // 'map' | 'table'
 
   const availableYears = useMemo(() => {
@@ -116,6 +142,12 @@ function App() {
       {view === 'map' && (
         <div className="year-filter-bar">
           <div className="year-filter-years">
+            <button
+              className={`region-pill${filterRegion === null ? ' region-pill--active' : ''}`}
+              onClick={() => setFilterRegion(null)}
+            >
+              All
+            </button>
             {REGIONS.map(r => (
               <button
                 key={r.id}
@@ -128,6 +160,13 @@ function App() {
           </div>
           {availableYears.length > 0 && (
             <div className="year-filter-years">
+              <button
+                className={`year-pill${filterYear === null ? ' year-pill--active' : ''}`}
+                style={filterYear === null ? { background: '#374151', borderColor: '#374151' } : {}}
+                onClick={() => { setFilterYear(null); setFilterMonth(null); setFilterDay(null); }}
+              >
+                All
+              </button>
               {availableYears.map(year => (
                 <button
                   key={year}
@@ -137,6 +176,26 @@ function App() {
                 >
                   <span className="year-pill-dot" style={{ background: yearColorMap[year] }}></span>
                   {year}
+                </button>
+              ))}
+            </div>
+          )}
+          {passFiles.length > 0 && (
+            <div className="year-filter-years">
+              <button
+                className={`pass-toggle${showPasses ? ' pass-toggle--active' : ''}`}
+                onClick={() => setShowPasses(v => !v)}
+              >
+                ▲ Passes
+              </button>
+              {showPasses && passFiles.map(f => (
+                <button
+                  key={f.id}
+                  className={`month-pill${activePassFiles.has(f.id) ? ' month-pill--active' : ''}`}
+                  style={activePassFiles.has(f.id) ? { background: '#7c3aed', borderColor: '#7c3aed' } : {}}
+                  onClick={() => togglePassFile(f.id)}
+                >
+                  {f.name}
                 </button>
               ))}
             </div>
@@ -182,6 +241,7 @@ function App() {
           yearColorMap={yearColorMap}
           regions={REGIONS}
           filterRegion={filterRegion}
+          passWaypoints={visiblePassWaypoints}
         />
       )}
 
