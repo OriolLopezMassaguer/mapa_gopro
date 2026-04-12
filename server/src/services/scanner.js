@@ -5,7 +5,8 @@ import config from '../config.js';
 const VIDEO_EXTS = /\.(mp4|mov)$/i;
 const PHOTO_EXTS = /\.(jpg|jpeg|png|heic)$/i;
 
-function scanRecursive(dir, results) {
+
+function scanRecursive(dir, results, isTopLevel = false) {
   let entries;
   try {
     entries = fs.readdirSync(dir);
@@ -17,6 +18,9 @@ function scanRecursive(dir, results) {
   for (const entry of entries) {
     // Skip hidden files and Synology system directories/files
     if (entry.startsWith('.')) continue;
+
+    // Skip excluded top-level directories
+    if (isTopLevel && config.excludedDirs.has(entry.toLowerCase())) continue;
 
     const filepath = path.join(dir, entry);
     let stat;
@@ -63,7 +67,7 @@ export function scanMediaDirectory() {
   }
 
   const results = [];
-  scanRecursive(dir, results);
+  scanRecursive(dir, results, true);
 
   const videos = results.filter(r => r.type === 'video').length;
   const photos = results.filter(r => r.type === 'photo').length;
