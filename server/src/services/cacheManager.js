@@ -181,8 +181,25 @@ async function processPhoto(file, prefix) {
   }
 }
 
+// Run up to `concurrency` async tasks at once.
+async function runPool(items, fn, concurrency) {
+  const iter = items[Symbol.iterator]();
+  async function worker() {
+    for (let next = iter.next(); !next.done; next = iter.next()) {
+      await fn(next.value);
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, worker);
+  await Promise.all(workers);
+}
+
+// How many files to process in parallel.
+// Videos each spawn an ffmpeg process, so keep this modest.
+const CACHE_CONCURRENCY = parseInt(process.env.CACHE_CONCURRENCY, 10) || 4;
+
 export async function initializeCache() {
   ensureDirs();
+  console.log(`Cache concurrency: ${CACHE_CONCURRENCY}`);
   const mediaFiles = scanMediaDirectory();
 
   if (mediaFiles.length === 0) {
@@ -190,17 +207,14 @@ export async function initializeCache() {
     return;
   }
 
-  let processed = 0;
   let cached = 0;
   let extracted = 0;
   let noGps = 0;
   let errors = 0;
 
+  // Resolve cache hits synchronously first (fast — just JSON reads).
+  const toProcess = [];
   for (const file of mediaFiles) {
-    processed++;
-    const prefix = `[${processed}/${mediaFiles.length}]`;
-
-    // Check cache by ID first (same path), then by fingerprint (file relocated)
     let cacheEntry = readCache(file.id);
     const mtimeMatch = cacheEntry && Math.abs(
       new Date(cacheEntry.lastModified).getTime() - new Date(file.lastModified).getTime()
@@ -219,8 +233,7 @@ export async function initializeCache() {
     const relocated = findCacheByFingerprint(file);
     if (relocated) {
       const { entry: oldEntry, oldId } = relocated;
-      console.log(`${prefix} Relocated: ${oldEntry.relativePath} -> ${file.relativePath}`);
-      // Migrate entry to new ID/path, discard old cache file
+      console.log(`Relocated: ${oldEntry.relativePath} -> ${file.relativePath}`);
       const updatedEntry = {
         ...oldEntry,
         id: file.id,
@@ -236,34 +249,45 @@ export async function initializeCache() {
       continue;
     }
 
-    try {
-      let result;
-      if (file.type === 'video') {
-        result = await processVideo(file, prefix);
-      } else {
-        result = await processPhoto(file, prefix);
+    toProcess.push(file);
+  }
+
+  if (toProcess.length > 0) {
+    console.log(`Processing ${toProcess.length} new files (concurrency: ${CACHE_CONCURRENCY})…`);
+
+    let done = 0;
+    await runPool(toProcess, async (file) => {
+      const idx = ++done;
+      const prefix = `[${idx}/${toProcess.length}]`;
+      try {
+        let result;
+        if (file.type === 'video') {
+          result = await processVideo(file, prefix);
+        } else {
+          result = await processPhoto(file, prefix);
+        }
+        if (result === 'extracted') extracted++;
+        else noGps++;
+      } catch (err) {
+        console.error(`${prefix} Error processing ${file.relativePath}: ${err.message}`);
+        // Cache the error so we don't retry on next restart
+        const entry = {
+          id: file.id,
+          filename: file.filename,
+          filepath: file.filepath,
+          relativePath: file.relativePath,
+          subfolder: file.subfolder,
+          fileSize: file.fileSize,
+          lastModified: file.lastModified,
+          type: file.type,
+          noGps: true,
+          error: err.message,
+        };
+        writeCache(file.id, entry);
+        allMediaIndex.set(file.id, entry);
+        errors++;
       }
-      if (result === 'extracted') extracted++;
-      else noGps++;
-    } catch (err) {
-      console.error(`${prefix} Error processing ${file.relativePath}: ${err.message}`);
-      // Cache the error so we don't retry on next restart
-      const entry = {
-        id: file.id,
-        filename: file.filename,
-        filepath: file.filepath,
-        relativePath: file.relativePath,
-        subfolder: file.subfolder,
-        fileSize: file.fileSize,
-        lastModified: file.lastModified,
-        type: file.type,
-        noGps: true,
-        error: err.message,
-      };
-      writeCache(file.id, entry);
-      allMediaIndex.set(file.id, entry);
-      errors++;
-    }
+    }, CACHE_CONCURRENCY);
   }
 
   console.log(`\nCache initialization complete:`);
