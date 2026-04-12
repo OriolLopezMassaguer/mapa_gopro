@@ -18,7 +18,28 @@
       "Bash(curl -L -o /tmp/node-installer.msi \"https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi\")",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''keys:'', list\\(d.keys\\(\\)\\)\\); print\\(''totalPoints:'', d.get\\(''totalPoints''\\)\\); coords=d.get\\(''coordinates'',[]\\); print\\(''first coord:'', coords[0] if coords else None\\)\")",
       "Bash(while read f)",
-      "Bash(do node -e \"const d=require\\(''./server/cache-data/metadata/$f''\\); console.log\\(''$f:'', d.type, ''coords:'', d.coordinates ? d.coordinates.length : ''none'', ''startPoint:'', d.startPoint ? ''yes'' : ''no''\\)\" done)"
+      "Bash(do node -e \"const d=require\\(''./server/cache-data/metadata/$f''\\); console.log\\(''$f:'', d.type, ''coords:'', d.coordinates ? d.coordinates.length : ''none'', ''startPoint:'', d.startPoint ? ''yes'' : ''no''\\)\" done)",
+      "Bash(node check_gps.mjs)",
+      "Bash(node check_nogps.mjs)",
+      "Bash(node check_dupes.mjs)",
+      "Bash(cmd.exe /c \"dir /AL \"\"e:\\\\videos alpes\\\\\"\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''e:/videos alpes'' | Select-Object Name, LinkType, Target\")",
+      "Bash(xargs -d '\\\\n' rm)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/api/media/list)",
+      "Bash(powershell.exe -Command \"Stop-Process -Id 33188 -Force\")",
+      "Bash(powershell.exe -Command \"Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\")",
+      "Bash(curl -s http://localhost:3001/api/media)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/api/media)",
+      "Read(///babel/Alpes//**)",
+      "Read(///babel/GoPro//**)",
+      "Read(//e//**)",
+      "Bash(xargs -I{} cat r:/mapa_gopro/server/cache-data/metadata/{})",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''filepath'''',''''''''\\), d.get\\(''''relativePath'''',''''''''\\)\\)\")",
+      "Bash(python3 -c \":*)",
+      "Read(///babel/Alpes/videos gopro/**)",
+      "Bash(net view:*)",
+      "Read(///babel/Alpes/alpes2022/**)",
+      "Bash(node server/migrate-cache.js)"
     ]
   }
 }

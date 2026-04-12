@@ -40,6 +40,49 @@ function writeCache(id, data) {
   fs.writeFileSync(cachePath, JSON.stringify(data, null, 2));
 }
 
+function deleteCache(id) {
+  const cachePath = getCachePath(id);
+  try {
+    if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
+  } catch {
+    // ignore
+  }
+}
+
+// Build a fingerprint to identify a file regardless of its path.
+// Uses filename + fileSize + mtime (within 1s tolerance).
+function fingerprintMatches(entry, file) {
+  if (entry.filename !== file.filename) return false;
+  if (entry.fileSize !== file.fileSize) return false;
+  return Math.abs(new Date(entry.lastModified).getTime() - new Date(file.lastModified).getTime()) < 1000;
+}
+
+// Scan all cache JSON files to find one matching by fingerprint (for relocation detection).
+// Returns { entry, oldId } or null.
+function findCacheByFingerprint(file) {
+  let dir;
+  try {
+    dir = fs.readdirSync(config.metadataDir, { recursive: true });
+  } catch {
+    return null;
+  }
+  for (const name of dir) {
+    if (!name.endsWith('.json')) continue;
+    const fullPath = path.join(config.metadataDir, name);
+    let entry;
+    try {
+      entry = JSON.parse(fs.readFileSync(fullPath, 'utf-8'));
+    } catch {
+      continue;
+    }
+    if (fingerprintMatches(entry, file)) {
+      const oldId = entry.id;
+      return { entry, oldId };
+    }
+  }
+  return null;
+}
+
 function withTimeout(promise, ms) {
   return Promise.race([
     promise,
@@ -157,22 +200,38 @@ export async function initializeCache() {
     processed++;
     const prefix = `[${processed}/${mediaFiles.length}]`;
 
-    // Check cache (compare timestamps within 1s tolerance for copy/move precision loss)
-    const cacheEntry = readCache(file.id);
+    // Check cache by ID first (same path), then by fingerprint (file relocated)
+    let cacheEntry = readCache(file.id);
     const mtimeMatch = cacheEntry && Math.abs(
       new Date(cacheEntry.lastModified).getTime() - new Date(file.lastModified).getTime()
     ) < 1000;
-    if (
-      cacheEntry &&
-      cacheEntry.fileSize === file.fileSize &&
-      mtimeMatch
-    ) {
-      // Update filepath in case VIDEO_DIR changed
+
+    if (cacheEntry && cacheEntry.fileSize === file.fileSize && mtimeMatch) {
+      // Same path hit — update filepath in case VIDEO_DIR root changed
       cacheEntry.filepath = file.filepath;
       allMediaIndex.set(file.id, cacheEntry);
-      if (!cacheEntry.noGps) {
-        mediaIndex.set(file.id, cacheEntry);
-      }
+      if (!cacheEntry.noGps) mediaIndex.set(file.id, cacheEntry);
+      cached++;
+      continue;
+    }
+
+    // Path-based miss — search all cache files by fingerprint to detect relocation
+    const relocated = findCacheByFingerprint(file);
+    if (relocated) {
+      const { entry: oldEntry, oldId } = relocated;
+      console.log(`${prefix} Relocated: ${oldEntry.relativePath} -> ${file.relativePath}`);
+      // Migrate entry to new ID/path, discard old cache file
+      const updatedEntry = {
+        ...oldEntry,
+        id: file.id,
+        filepath: file.filepath,
+        relativePath: file.relativePath,
+        subfolder: file.subfolder,
+      };
+      writeCache(file.id, updatedEntry);
+      if (oldId !== file.id) deleteCache(oldId);
+      allMediaIndex.set(file.id, updatedEntry);
+      if (!updatedEntry.noGps) mediaIndex.set(file.id, updatedEntry);
       cached++;
       continue;
     }
