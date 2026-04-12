@@ -61,21 +61,24 @@ function App() {
   }, [availableYears]);
 
   const availableMonths = useMemo(() => {
-    if (!filterYear) return [];
     const months = new Set(
-      videos.filter(v => v.startDate && new Date(v.startDate).getFullYear() === filterYear)
-        .map(v => new Date(v.startDate).getMonth() + 1)
+      videos.filter(v => {
+        if (!v.startDate) return false;
+        if (filterYear && new Date(v.startDate).getFullYear() !== filterYear) return false;
+        return true;
+      }).map(v => new Date(v.startDate).getMonth() + 1)
     );
     return [...months].sort((a, b) => a - b);
   }, [videos, filterYear]);
 
   const availableDays = useMemo(() => {
-    if (!filterYear || !filterMonth) return [];
+    if (!filterMonth) return [];
     const days = new Set(
       videos.filter(v => {
         if (!v.startDate) return false;
         const d = new Date(v.startDate);
-        return d.getFullYear() === filterYear && d.getMonth() + 1 === filterMonth;
+        if (filterYear && d.getFullYear() !== filterYear) return false;
+        return d.getMonth() + 1 === filterMonth;
       }).map(v => new Date(v.startDate).getDate())
     );
     return [...days].sort((a, b) => a - b);

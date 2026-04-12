@@ -1,0 +1,1337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.0" creator="GPSBabel - https://www.gpsbabel.org" xmlns="http://www.topografix.com/GPX/1/0">
+  <time>2026-04-12T16:32:32.108Z</time>
+  <bounds minlat="43.783300000" minlon="5.278300000" maxlat="47.816700000" maxlon="14.566700000"/>
+  <wpt lat="46.576300000" lon="9.695000000">
+    <ele>0.000</ele>
+    <name>ALBULAPASS</name>
+    <cmt>Alternative name: Pass d'Alvra | Country: CH | Altitude: 2315 m</cmt>
+    <desc>Alternative name: Pass d'Alvra | Country: CH | Altitude: 2315 m</desc>
+  </wpt>
+  <wpt lat="45.091000000" lon="6.069000000">
+    <ele>0.000</ele>
+    <name>ALPE D'HUEZ</name>
+    <cmt>Country: FR | Altitude: 1815 m</cmt>
+    <desc>Country: FR | Altitude: 1815 m</desc>
+  </wpt>
+  <wpt lat="46.068300000" lon="8.736700000">
+    <ele>0.000</ele>
+    <name>ALPE DI NEGGIA</name>
+    <cmt>Country: CH/IT | Altitude: 1395 m</cmt>
+    <desc>Country: CH/IT | Altitude: 1395 m</desc>
+  </wpt>
+  <wpt lat="47.650000000" lon="12.980000000">
+    <ele>0.000</ele>
+    <name>ALPENSTRASSE</name>
+    <cmt>Country: DE | Altitude: 779 m</cmt>
+    <desc>Country: DE | Altitude: 779 m</desc>
+  </wpt>
+  <wpt lat="46.985000000" lon="8.605000000">
+    <ele>0.000</ele>
+    <name>ALTE AXENSTRASSE</name>
+    <cmt>Country: CH | Altitude: 520 m</cmt>
+    <desc>Country: CH | Altitude: 520 m</desc>
+  </wpt>
+  <wpt lat="46.561700000" lon="8.331700000">
+    <ele>0.000</ele>
+    <name>ALTE GRIMSELPASS-STRASSE</name>
+    <cmt>Country: CH | Altitude: 1589 m</cmt>
+    <desc>Country: CH | Altitude: 1589 m</desc>
+  </wpt>
+  <wpt lat="47.150000000" lon="9.520000000">
+    <ele>0.000</ele>
+    <name>ALTER WIAGATUNNEL</name>
+    <cmt>Country: LI | Altitude: 1430 m</cmt>
+    <desc>Country: LI | Altitude: 1430 m</desc>
+  </wpt>
+  <wpt lat="47.583300000" lon="11.216700000">
+    <ele>0.000</ele>
+    <name>AMMERSATTEL</name>
+    <cmt>Country: DE/AT | Altitude: 1118 m</cmt>
+    <desc>Country: DE/AT | Altitude: 1118 m</desc>
+  </wpt>
+  <wpt lat="46.406700000" lon="10.028300000">
+    <ele>0.000</ele>
+    <name>BERNINAPASS</name>
+    <cmt>Alternative name: Passo del Bernina | Country: CH | Altitude: 2330 m</cmt>
+    <desc>Alternative name: Passo del Bernina | Country: CH | Altitude: 2330 m</desc>
+  </wpt>
+  <wpt lat="47.001700000" lon="11.506700000">
+    <ele>0.000</ele>
+    <name>BRENNERPASS</name>
+    <cmt>Alternative name: Passo del Brennero | Country: DE/IT | Altitude: 1370 m</cmt>
+    <desc>Alternative name: Passo del Brennero | Country: DE/IT | Altitude: 1370 m</desc>
+  </wpt>
+  <wpt lat="46.380000000" lon="10.350000000">
+    <ele>0.000</ele>
+    <name>CIMA RASGADA</name>
+    <cmt>Country: IT | Altitude: 923 m</cmt>
+    <desc>Country: IT | Altitude: 923 m</desc>
+  </wpt>
+  <wpt lat="43.883300000" lon="6.816700000">
+    <ele>0.000</ele>
+    <name>CIRQUE DE VAUMALE</name>
+    <cmt>Alternative name: Col d'Illoire | Country: FR | Altitude: 1189 m</cmt>
+    <desc>Alternative name: Col d'Illoire | Country: FR | Altitude: 1189 m</desc>
+  </wpt>
+  <wpt lat="43.933300000" lon="6.916700000">
+    <ele>0.000</ele>
+    <name>CLUE D'AIGLUN</name>
+    <cmt>Country: FR | Altitude: 902 m</cmt>
+    <desc>Country: FR | Altitude: 902 m</desc>
+  </wpt>
+  <wpt lat="44.083300000" lon="6.283300000">
+    <ele>0.000</ele>
+    <name>CLUE DE BARLES + CLUE DE PÉROURÉ</name>
+    <cmt>Country: FR | Altitude: 1154 m</cmt>
+    <desc>Country: FR | Altitude: 1154 m</desc>
+  </wpt>
+  <wpt lat="43.800000000" lon="6.716700000">
+    <ele>0.000</ele>
+    <name>CLUE DE CARAJUAN + CLUE DE CHASTEUIL</name>
+    <cmt>Country: FR | Altitude: 921 m</cmt>
+    <desc>Country: FR | Altitude: 921 m</desc>
+  </wpt>
+  <wpt lat="43.950000000" lon="6.850000000">
+    <ele>0.000</ele>
+    <name>CLUE DE LA ROCHE PERCÉE</name>
+    <cmt>Country: FR | Altitude: 1071 m</cmt>
+    <desc>Country: FR | Altitude: 1071 m</desc>
+  </wpt>
+  <wpt lat="43.966700000" lon="6.950000000">
+    <ele>0.000</ele>
+    <name>CLUE DE RAYAUP</name>
+    <cmt>Country: FR | Altitude: 1048 m</cmt>
+    <desc>Country: FR | Altitude: 1048 m</desc>
+  </wpt>
+  <wpt lat="43.983300000" lon="6.783300000">
+    <ele>0.000</ele>
+    <name>CLUE DE SAINT-AUBAN</name>
+    <cmt>Country: FR | Altitude: 1037 m</cmt>
+    <desc>Country: FR | Altitude: 1037 m</desc>
+  </wpt>
+  <wpt lat="43.966700000" lon="6.933300000">
+    <ele>0.000</ele>
+    <name>CLUE DU RIOLAN</name>
+    <cmt>Country: FR | Altitude: 671 m</cmt>
+    <desc>Country: FR | Altitude: 671 m</desc>
+  </wpt>
+  <wpt lat="44.683300000" lon="6.983300000">
+    <ele>0.000</ele>
+    <name>COL AGNEL</name>
+    <cmt>Alternative name: Coille dell'Agnello | Country: FR/IT | Altitude: 2744 m</cmt>
+    <desc>Alternative name: Coille dell'Agnello | Country: FR/IT | Altitude: 2744 m</desc>
+  </wpt>
+  <wpt lat="44.233300000" lon="6.583300000">
+    <ele>0.000</ele>
+    <name>COL D'ALLOS</name>
+    <cmt>Country: FR | Altitude: 2250 m</cmt>
+    <desc>Country: FR | Altitude: 2250 m</desc>
+  </wpt>
+  <wpt lat="43.866700000" lon="6.833300000">
+    <ele>0.000</ele>
+    <name>COL D'AYEN</name>
+    <cmt>Alternative name: Route de Castellane | Country: FR | Altitude: 1031 m</cmt>
+    <desc>Alternative name: Route de Castellane | Country: FR | Altitude: 1031 m</desc>
+  </wpt>
+  <wpt lat="43.883300000" lon="7.466700000">
+    <ele>0.000</ele>
+    <name>COL DE BRAUS</name>
+    <cmt>Country: FR | Altitude: 1002 m</cmt>
+    <desc>Country: FR | Altitude: 1002 m</desc>
+  </wpt>
+  <wpt lat="43.883300000" lon="7.516700000">
+    <ele>0.000</ele>
+    <name>COL DE BROUIS</name>
+    <cmt>Country: FR | Altitude: 879 m</cmt>
+    <desc>Country: FR | Altitude: 879 m</desc>
+  </wpt>
+  <wpt lat="43.883300000" lon="7.566700000">
+    <ele>0.000</ele>
+    <name>COL DE CASTILLON</name>
+    <cmt>Country: FR | Altitude: 706 m</cmt>
+    <desc>Country: FR | Altitude: 706 m</desc>
+  </wpt>
+  <wpt lat="46.050000000" lon="7.116700000">
+    <ele>0.000</ele>
+    <name>COL DE CHAMPEX</name>
+    <cmt>Country: CH | Altitude: 1497 m</cmt>
+    <desc>Country: CH | Altitude: 1497 m</desc>
+  </wpt>
+  <wpt lat="46.066700000" lon="6.716700000">
+    <ele>0.000</ele>
+    <name>COL DE JOUX PLANE</name>
+    <cmt>Country: FR | Altitude: 1700 m</cmt>
+    <desc>Country: FR | Altitude: 1700 m</desc>
+  </wpt>
+  <wpt lat="44.321700000" lon="6.806700000">
+    <ele>0.000</ele>
+    <name>COL DE LA BONETTE</name>
+    <cmt>Alternative name: Col de Restefond | Country: FR | Altitude: 2715 m</cmt>
+    <desc>Alternative name: Col de Restefond | Country: FR | Altitude: 2715 m</desc>
+  </wpt>
+  <wpt lat="44.250000000" lon="6.733300000">
+    <ele>0.000</ele>
+    <name>COL DE LA CAYOLLE</name>
+    <cmt>Country: FR | Altitude: 2326 m</cmt>
+    <desc>Country: FR | Altitude: 2326 m</desc>
+  </wpt>
+  <wpt lat="45.983300000" lon="6.466700000">
+    <ele>0.000</ele>
+    <name>COL DE LA COLOMBIÈRE</name>
+    <cmt>Country: FR | Altitude: 1618 m</cmt>
+    <desc>Country: FR | Altitude: 1618 m</desc>
+  </wpt>
+  <wpt lat="44.083300000" lon="7.000000000">
+    <ele>0.000</ele>
+    <name>COL DE LA COUILLOLE</name>
+    <cmt>Country: FR | Altitude: 1678 m</cmt>
+    <desc>Country: FR | Altitude: 1678 m</desc>
+  </wpt>
+  <wpt lat="46.433300000" lon="6.966700000">
+    <ele>0.000</ele>
+    <name>COL DE LA CROIX</name>
+    <cmt>Country: CH | Altitude: 1778 m</cmt>
+    <desc>Country: CH | Altitude: 1778 m</desc>
+  </wpt>
+  <wpt lat="45.228300000" lon="6.175000000">
+    <ele>0.000</ele>
+    <name>COL DE LA CROIX-DE-FER</name>
+    <cmt>Country: FR | Altitude: 2067 m</cmt>
+    <desc>Country: FR | Altitude: 2067 m</desc>
+  </wpt>
+  <wpt lat="46.050000000" lon="7.000000000">
+    <ele>0.000</ele>
+    <name>COL DE LA FORCLAZ</name>
+    <cmt>Country: CH | Altitude: 1527 m</cmt>
+    <desc>Country: CH | Altitude: 1527 m</desc>
+  </wpt>
+  <wpt lat="46.078300000" lon="6.930000000">
+    <ele>0.000</ele>
+    <name>COL DE LA GUEULAZ</name>
+    <cmt>Country: CH | Altitude: 1965 m</cmt>
+    <desc>Country: CH | Altitude: 1965 m</desc>
+  </wpt>
+  <wpt lat="46.100000000" lon="6.750000000">
+    <ele>0.000</ele>
+    <name>COL DE LA JOUX VERTE</name>
+    <cmt>Country: FR | Altitude: 1760 m</cmt>
+    <desc>Country: FR | Altitude: 1760 m</desc>
+  </wpt>
+  <wpt lat="44.183300000" lon="7.066700000">
+    <ele>0.000</ele>
+    <name>COL DE LA LOMBARDE</name>
+    <cmt>Alternative name: Colle della Lombarda | Country: FR/IT | Altitude: 2350 m</cmt>
+    <desc>Alternative name: Colle della Lombarda | Country: FR/IT | Altitude: 2350 m</desc>
+  </wpt>
+  <wpt lat="45.433300000" lon="6.366700000">
+    <ele>0.000</ele>
+    <name>COL DE LA MADELEINE</name>
+    <cmt>Country: FR | Altitude: 1993 m</cmt>
+    <desc>Country: FR | Altitude: 1993 m</desc>
+  </wpt>
+  <wpt lat="43.783300000" lon="7.416700000">
+    <ele>0.000</ele>
+    <name>COL DE LA MADONE DE GORBIO</name>
+    <cmt>Country: FR | Altitude: 925 m</cmt>
+    <desc>Country: FR | Altitude: 925 m</desc>
+  </wpt>
+  <wpt lat="44.050000000" lon="7.083300000">
+    <ele>0.000</ele>
+    <name>COL DE LA SINNE + GORGES DE PIERLAS</name>
+    <cmt>Country: FR | Altitude: 1438 m</cmt>
+    <desc>Country: FR | Altitude: 1438 m</desc>
+  </wpt>
+  <wpt lat="45.733300000" lon="6.583300000">
+    <ele>0.000</ele>
+    <name>COL DE L'ARPETTAZ</name>
+    <cmt>Country: FR | Altitude: 1581 m</cmt>
+    <desc>Country: FR | Altitude: 1581 m</desc>
+  </wpt>
+  <wpt lat="44.933300000" lon="6.733300000">
+    <ele>0.000</ele>
+    <name>COL DE L'ÉCHELLE</name>
+    <cmt>Country: FR | Altitude: 1762 m</cmt>
+    <desc>Country: FR | Altitude: 1762 m</desc>
+  </wpt>
+  <wpt lat="45.416700000" lon="7.033300000">
+    <ele>0.000</ele>
+    <name>COL DE L'ISERAN</name>
+    <cmt>Country: FR | Altitude: 2770 m</cmt>
+    <desc>Country: FR | Altitude: 2770 m</desc>
+  </wpt>
+  <wpt lat="44.633300000" lon="5.483300000">
+    <ele>0.000</ele>
+    <name>COL DE MENÉE</name>
+    <cmt>Country: FR | Altitude: 1402 m</cmt>
+    <desc>Country: FR | Altitude: 1402 m</desc>
+  </wpt>
+  <wpt lat="44.933300000" lon="6.716700000">
+    <ele>0.000</ele>
+    <name>COL DE MONTGENÈVRE</name>
+    <cmt>Country: FR/IT | Altitude: 1860 m</cmt>
+    <desc>Country: FR/IT | Altitude: 1860 m</desc>
+  </wpt>
+  <wpt lat="44.750000000" lon="5.383300000">
+    <ele>0.000</ele>
+    <name>COL DE ROUSSET</name>
+    <cmt>Country: FR | Altitude: 1254 m</cmt>
+    <desc>Country: FR | Altitude: 1254 m</desc>
+  </wpt>
+  <wpt lat="43.916700000" lon="7.216700000">
+    <ele>0.000</ele>
+    <name>COL DE SAINT PANCRACE</name>
+    <cmt>Country: FR | Altitude: 673 m</cmt>
+    <desc>Country: FR | Altitude: 673 m</desc>
+  </wpt>
+  <wpt lat="45.083300000" lon="6.083300000">
+    <ele>0.000</ele>
+    <name>COL DE SARENNE</name>
+    <cmt>Country: FR | Altitude: 1999 m</cmt>
+    <desc>Country: FR | Altitude: 1999 m</desc>
+  </wpt>
+  <wpt lat="43.983300000" lon="7.400000000">
+    <ele>0.000</ele>
+    <name>COL DE TURINI</name>
+    <cmt>Country: FR | Altitude: 1607 m</cmt>
+    <desc>Country: FR | Altitude: 1607 m</desc>
+  </wpt>
+  <wpt lat="44.083300000" lon="6.916700000">
+    <ele>0.000</ele>
+    <name>COL DE VALBERG</name>
+    <cmt>Country: FR | Altitude: 1672 m</cmt>
+    <desc>Country: FR | Altitude: 1672 m</desc>
+  </wpt>
+  <wpt lat="44.538300000" lon="6.703300000">
+    <ele>0.000</ele>
+    <name>COL DE VARS</name>
+    <cmt>Country: FR | Altitude: 2109 m</cmt>
+    <desc>Country: FR | Altitude: 2109 m</desc>
+  </wpt>
+  <wpt lat="45.866700000" lon="6.383300000">
+    <ele>0.000</ele>
+    <name>COL DES ARAVIS</name>
+    <cmt>Country: FR | Altitude: 1498 m</cmt>
+    <desc>Country: FR | Altitude: 1498 m</desc>
+  </wpt>
+  <wpt lat="44.166700000" lon="6.683300000">
+    <ele>0.000</ele>
+    <name>COL DES CHAMPS</name>
+    <cmt>Country: FR | Altitude: 2087 m</cmt>
+    <desc>Country: FR | Altitude: 2087 m</desc>
+  </wpt>
+  <wpt lat="44.173300000" lon="5.278300000">
+    <ele>0.000</ele>
+    <name>COL DES TEMPÊTES (MONT VENTOUX)</name>
+    <cmt>Country: FR | Altitude: 1830 m</cmt>
+    <desc>Country: FR | Altitude: 1830 m</desc>
+  </wpt>
+  <wpt lat="44.821700000" lon="6.735000000">
+    <ele>0.000</ele>
+    <name>COL D'IZOARD</name>
+    <cmt>Country: FR | Altitude: 2360 m</cmt>
+    <desc>Country: FR | Altitude: 2360 m</desc>
+  </wpt>
+  <wpt lat="45.216700000" lon="6.383300000">
+    <ele>0.000</ele>
+    <name>COL DU CHAUSSY</name>
+    <cmt>Country: FR | Altitude: 1533 m</cmt>
+    <desc>Country: FR | Altitude: 1533 m</desc>
+  </wpt>
+  <wpt lat="45.063300000" lon="6.408300000">
+    <ele>0.000</ele>
+    <name>COL DU GALIBIER</name>
+    <cmt>Country: FR | Altitude: 2642 m</cmt>
+    <desc>Country: FR | Altitude: 2642 m</desc>
+  </wpt>
+  <wpt lat="45.183300000" lon="6.166700000">
+    <ele>0.000</ele>
+    <name>COL DU GLANDON</name>
+    <cmt>Country: FR | Altitude: 1924 m</cmt>
+    <desc>Country: FR | Altitude: 1924 m</desc>
+  </wpt>
+  <wpt lat="45.868300000" lon="7.170000000">
+    <ele>0.000</ele>
+    <name>COL DU GRAND-SAINT-BERNARD</name>
+    <cmt>Alternative name: Colle del Gran San Bernardo | Country: CH | Altitude: 2469 m</cmt>
+    <desc>Alternative name: Colle del Gran San Bernardo | Country: CH | Altitude: 2469 m</desc>
+  </wpt>
+  <wpt lat="44.983300000" lon="6.583300000">
+    <ele>0.000</ele>
+    <name>COL DU GRANON</name>
+    <cmt>Country: FR | Altitude: 2413 m</cmt>
+    <desc>Country: FR | Altitude: 2413 m</desc>
+  </wpt>
+  <wpt lat="45.250000000" lon="6.900000000">
+    <ele>0.000</ele>
+    <name>COL DU MONT-CENIS</name>
+    <cmt>Alternative name: Colle del Moncenisio | Country: FR/IT | Altitude: 2083 m</cmt>
+    <desc>Alternative name: Colle del Moncenisio | Country: FR/IT | Altitude: 2083 m</desc>
+  </wpt>
+  <wpt lat="44.616700000" lon="6.050000000">
+    <ele>0.000</ele>
+    <name>COL DU NOYER</name>
+    <cmt>Country: FR | Altitude: 1664 m</cmt>
+    <desc>Country: FR | Altitude: 1664 m</desc>
+  </wpt>
+  <wpt lat="45.683300000" lon="6.883300000">
+    <ele>0.000</ele>
+    <name>COL DU PETIT-SAINT-BERNARD</name>
+    <cmt>Alternative name: Colle del Piccolo San Bernardo | Country: FR/IT | Altitude: 2188 m</cmt>
+    <desc>Alternative name: Colle del Piccolo San Bernardo | Country: FR/IT | Altitude: 2188 m</desc>
+  </wpt>
+  <wpt lat="46.333300000" lon="7.283300000">
+    <ele>0.000</ele>
+    <name>COL DU SANETSCH</name>
+    <cmt>Alternative name: Col du Senin | Country: CH | Altitude: 2253 m</cmt>
+    <desc>Alternative name: Col du Senin | Country: CH | Altitude: 2253 m</desc>
+  </wpt>
+  <wpt lat="45.083300000" lon="6.083300000">
+    <ele>0.000</ele>
+    <name>COL DU SOLUDE</name>
+    <cmt>Country: FR | Altitude: 1680 m</cmt>
+    <desc>Country: FR | Altitude: 1680 m</desc>
+  </wpt>
+  <wpt lat="45.200000000" lon="6.433300000">
+    <ele>0.000</ele>
+    <name>COL DU TÉLÉGRAPHE</name>
+    <cmt>Country: FR | Altitude: 1566 m</cmt>
+    <desc>Country: FR | Altitude: 1566 m</desc>
+  </wpt>
+  <wpt lat="44.033300000" lon="7.216700000">
+    <ele>0.000</ele>
+    <name>COL SAINT-MARTIN</name>
+    <cmt>Alternative name: La Colmiane | Country: FR | Altitude: 1500 m</cmt>
+    <desc>Alternative name: La Colmiane | Country: FR | Altitude: 1500 m</desc>
+  </wpt>
+  <wpt lat="45.183300000" lon="7.216700000">
+    <ele>0.000</ele>
+    <name>COLLE DEL LYS</name>
+    <cmt>Country: IT | Altitude: 1314 m</cmt>
+    <desc>Country: IT | Altitude: 1314 m</desc>
+  </wpt>
+  <wpt lat="45.500000000" lon="7.133300000">
+    <ele>0.000</ele>
+    <name>COLLE DEL NIVOLET</name>
+    <cmt>Country: IT | Altitude: 2612 m</cmt>
+    <desc>Country: IT | Altitude: 2612 m</desc>
+  </wpt>
+  <wpt lat="44.233300000" lon="7.783300000">
+    <ele>0.000</ele>
+    <name>COLLE DEL QUAZZO</name>
+    <cmt>Country: IT | Altitude: 1130 m</cmt>
+    <desc>Country: IT | Altitude: 1130 m</desc>
+  </wpt>
+  <wpt lat="45.833300000" lon="8.500000000">
+    <ele>0.000</ele>
+    <name>COLLE DELLA COLMA</name>
+    <cmt>Country: IT | Altitude: 1489 m</cmt>
+    <desc>Country: IT | Altitude: 1489 m</desc>
+  </wpt>
+  <wpt lat="44.428300000" lon="6.876700000">
+    <ele>0.000</ele>
+    <name>COLLE DELLA MADDALENA</name>
+    <cmt>Alternative name: Col de Larche | Country: IT | Altitude: 1996 m</cmt>
+    <desc>Alternative name: Col de Larche | Country: IT | Altitude: 1996 m</desc>
+  </wpt>
+  <wpt lat="45.050000000" lon="7.066700000">
+    <ele>0.000</ele>
+    <name>COLLE DELLE FINESTRE</name>
+    <cmt>Country: IT | Altitude: 2176 m</cmt>
+    <desc>Country: IT | Altitude: 2176 m</desc>
+  </wpt>
+  <wpt lat="44.333300000" lon="6.933300000">
+    <ele>0.000</ele>
+    <name>COLLE D'ESISCHIE</name>
+    <cmt>Country: IT | Altitude: 2370 m</cmt>
+    <desc>Country: IT | Altitude: 2370 m</desc>
+  </wpt>
+  <wpt lat="44.116700000" lon="7.950000000">
+    <ele>0.000</ele>
+    <name>COLLE DI CAPRAUNA</name>
+    <cmt>Country: IT | Altitude: 1375 m</cmt>
+    <desc>Country: IT | Altitude: 1375 m</desc>
+  </wpt>
+  <wpt lat="44.150000000" lon="7.566700000">
+    <ele>0.000</ele>
+    <name>COLLE DI TENDA</name>
+    <cmt>Country: FR/IT | Altitude: 1870 m</cmt>
+    <desc>Country: FR/IT | Altitude: 1870 m</desc>
+  </wpt>
+  <wpt lat="44.316700000" lon="7.000000000">
+    <ele>0.000</ele>
+    <name>COLLE FAUNIERA</name>
+    <cmt>Alternative name: Colle dei Morti | Country: IT | Altitude: 2481 m</cmt>
+    <desc>Alternative name: Colle dei Morti | Country: IT | Altitude: 2481 m</desc>
+  </wpt>
+  <wpt lat="44.100000000" lon="7.883300000">
+    <ele>0.000</ele>
+    <name>COLLE SAN BERNARDO</name>
+    <cmt>Country: IT | Altitude: 963 m</cmt>
+    <desc>Country: IT | Altitude: 963 m</desc>
+  </wpt>
+  <wpt lat="44.066700000" lon="8.016700000">
+    <ele>0.000</ele>
+    <name>COLLE SCRAVAION</name>
+    <cmt>Country: IT | Altitude: 814 m</cmt>
+    <desc>Country: IT | Altitude: 814 m</desc>
+  </wpt>
+  <wpt lat="45.850000000" lon="9.483300000">
+    <ele>0.000</ele>
+    <name>COLLI DI SAN FERMO</name>
+    <cmt>Country: IT | Altitude: 1216 m</cmt>
+    <desc>Country: IT | Altitude: 1216 m</desc>
+  </wpt>
+  <wpt lat="44.966700000" lon="5.316700000">
+    <ele>0.000</ele>
+    <name>COMBE LAVAL</name>
+    <cmt>Country: FR | Altitude: 1028 m</cmt>
+    <desc>Country: FR | Altitude: 1028 m</desc>
+  </wpt>
+  <wpt lat="45.701700000" lon="6.798300000">
+    <ele>0.000</ele>
+    <name>CORMET DE ROSELEND</name>
+    <cmt>Alternative name: Col du Méraillet | Country: FR | Altitude: 1968 m</cmt>
+    <desc>Alternative name: Col du Méraillet | Country: FR | Altitude: 1968 m</desc>
+  </wpt>
+  <wpt lat="47.133300000" lon="12.850000000">
+    <ele>0.000</ele>
+    <name>EDELWEISSSPITZE</name>
+    <cmt>Country: AT | Altitude: 2571 m</cmt>
+    <desc>Country: AT | Altitude: 2571 m</desc>
+  </wpt>
+  <wpt lat="46.748300000" lon="9.940000000">
+    <ele>0.000</ele>
+    <name>FLÜELAPASS</name>
+    <cmt>Country: CH | Altitude: 2383 m</cmt>
+    <desc>Country: CH | Altitude: 2383 m</desc>
+  </wpt>
+  <wpt lat="46.633300000" lon="12.250000000">
+    <ele>0.000</ele>
+    <name>FORCELLA DEL LAVARET</name>
+    <cmt>Country: IT | Altitude: 1549 m</cmt>
+    <desc>Country: IT | Altitude: 1549 m</desc>
+  </wpt>
+  <wpt lat="46.116700000" lon="12.583300000">
+    <ele>0.000</ele>
+    <name>FORCELLA DI BURA</name>
+    <cmt>Country: IT | Altitude: 884 m</cmt>
+    <desc>Country: IT | Altitude: 884 m</desc>
+  </wpt>
+  <wpt lat="46.233300000" lon="12.350000000">
+    <ele>0.000</ele>
+    <name>FORCELLA DI OLINO</name>
+    <cmt>Country: IT | Altitude: 1152 m</cmt>
+    <desc>Country: IT | Altitude: 1152 m</desc>
+  </wpt>
+  <wpt lat="46.566700000" lon="10.283300000">
+    <ele>0.000</ele>
+    <name>FORCOLA DI LIVIGNO</name>
+    <cmt>Alternative name: Livignopass | Country: CH/IT | Altitude: 2315 m</cmt>
+    <desc>Alternative name: Livignopass | Country: CH/IT | Altitude: 2315 m</desc>
+  </wpt>
+  <wpt lat="45.833300000" lon="7.183300000">
+    <ele>0.000</ele>
+    <name>FRAZIONE CERELLAZ/LA CURE</name>
+    <cmt>Country: IT | Altitude: 1278 m</cmt>
+    <desc>Country: IT | Altitude: 1278 m</desc>
+  </wpt>
+  <wpt lat="47.266700000" lon="9.933300000">
+    <ele>0.000</ele>
+    <name>FURKAJOCH</name>
+    <cmt>Country: AT | Altitude: 1760 m</cmt>
+    <desc>Country: AT | Altitude: 1760 m</desc>
+  </wpt>
+  <wpt lat="46.571700000" lon="8.415000000">
+    <ele>0.000</ele>
+    <name>FURKAPASS</name>
+    <cmt>Country: CH | Altitude: 2436 m</cmt>
+    <desc>Country: CH | Altitude: 2436 m</desc>
+  </wpt>
+  <wpt lat="46.616700000" lon="11.100000000">
+    <ele>0.000</ele>
+    <name>GAMPENPASS</name>
+    <cmt>Country: IT | Altitude: 1518 m</cmt>
+    <desc>Country: IT | Altitude: 1518 m</desc>
+  </wpt>
+  <wpt lat="44.100000000" lon="8.183300000">
+    <ele>0.000</ele>
+    <name>GIOGO DI TOIRANO</name>
+    <cmt>Country: IT | Altitude: 907 m</cmt>
+    <desc>Country: IT | Altitude: 907 m</desc>
+  </wpt>
+  <wpt lat="46.866700000" lon="8.133300000">
+    <ele>0.000</ele>
+    <name>GLAUBENBERGPASS</name>
+    <cmt>Country: CH | Altitude: 1540 m</cmt>
+    <desc>Country: CH | Altitude: 1540 m</desc>
+  </wpt>
+  <wpt lat="46.850000000" lon="8.150000000">
+    <ele>0.000</ele>
+    <name>GLAUBENBIELEN PANORAMASTRASSE</name>
+    <cmt>Country: CH | Altitude: 1611 m</cmt>
+    <desc>Country: CH | Altitude: 1611 m</desc>
+  </wpt>
+  <wpt lat="46.833300000" lon="13.666700000">
+    <ele>0.000</ele>
+    <name>GOLDECK PANORAMASTRASSE</name>
+    <cmt>Country: AT | Altitude: 1909 m</cmt>
+    <desc>Country: AT | Altitude: 1909 m</desc>
+  </wpt>
+  <wpt lat="43.966700000" lon="6.866700000">
+    <ele>0.000</ele>
+    <name>GORGES DE DALUIS</name>
+    <cmt>Country: FR | Altitude: 846 m</cmt>
+    <desc>Country: FR | Altitude: 846 m</desc>
+  </wpt>
+  <wpt lat="44.150000000" lon="6.233300000">
+    <ele>0.000</ele>
+    <name>GORGES DE LA BLANCHE</name>
+    <cmt>Country: FR | Altitude: 1072 m</cmt>
+    <desc>Country: FR | Altitude: 1072 m</desc>
+  </wpt>
+  <wpt lat="45.083300000" lon="5.433300000">
+    <ele>0.000</ele>
+    <name>GORGES DE LA BOURNE</name>
+    <cmt>Country: FR | Altitude: 967 m</cmt>
+    <desc>Country: FR | Altitude: 967 m</desc>
+  </wpt>
+  <wpt lat="44.050000000" lon="5.383300000">
+    <ele>0.000</ele>
+    <name>GORGES DE LA NESQUE</name>
+    <cmt>Country: FR | Altitude: 727 m</cmt>
+    <desc>Country: FR | Altitude: 727 m</desc>
+  </wpt>
+  <wpt lat="44.750000000" lon="5.416700000">
+    <ele>0.000</ele>
+    <name>GORGES DES GÂTS</name>
+    <cmt>Country: FR | Altitude: 863 m</cmt>
+    <desc>Country: FR | Altitude: 863 m</desc>
+  </wpt>
+  <wpt lat="44.083300000" lon="6.933300000">
+    <ele>0.000</ele>
+    <name>GORGES DU CIANS</name>
+    <cmt>Country: FR | Altitude: 1444 m</cmt>
+    <desc>Country: FR | Altitude: 1444 m</desc>
+  </wpt>
+  <wpt lat="45.316700000" lon="5.716700000">
+    <ele>0.000</ele>
+    <name>GORGES DU GUIERS MORT</name>
+    <cmt>Country: FR | Altitude: 802 m</cmt>
+    <desc>Country: FR | Altitude: 802 m</desc>
+  </wpt>
+  <wpt lat="45.416700000" lon="5.650000000">
+    <ele>0.000</ele>
+    <name>GORGES DU GUIERS VIF</name>
+    <cmt>Country: FR | Altitude: 682 m</cmt>
+    <desc>Country: FR | Altitude: 682 m</desc>
+  </wpt>
+  <wpt lat="44.616700000" lon="6.833300000">
+    <ele>0.000</ele>
+    <name>GORGES DU GUIL</name>
+    <cmt>Country: FR | Altitude: 1101 m</cmt>
+    <desc>Country: FR | Altitude: 1101 m</desc>
+  </wpt>
+  <wpt lat="44.983300000" lon="5.416700000">
+    <ele>0.000</ele>
+    <name>GORGES DU NAN</name>
+    <cmt>Country: FR | Altitude: 926 m</cmt>
+    <desc>Country: FR | Altitude: 926 m</desc>
+  </wpt>
+  <wpt lat="43.783300000" lon="6.400000000">
+    <ele>0.000</ele>
+    <name>GORGES DU VERDON</name>
+    <cmt>Country: FR | Altitude: 1311 m</cmt>
+    <desc>Country: FR | Altitude: 1311 m</desc>
+  </wpt>
+  <wpt lat="46.666700000" lon="8.583300000">
+    <ele>0.000</ele>
+    <name>GÖSCHENERALPSTRASSE</name>
+    <cmt>Country: CH | Altitude: 1786 m</cmt>
+    <desc>Country: CH | Altitude: 1786 m</desc>
+  </wpt>
+  <wpt lat="46.555000000" lon="8.568300000">
+    <ele>0.000</ele>
+    <name>GOTTARDOPASS-TREMOLA</name>
+    <cmt>Alternative name: Passo San Gottardo | Country: CH | Altitude: 2106 m</cmt>
+    <desc>Alternative name: Passo San Gottardo | Country: CH | Altitude: 2106 m</desc>
+  </wpt>
+  <wpt lat="46.563300000" lon="8.331700000">
+    <ele>0.000</ele>
+    <name>GRIMSELPASS</name>
+    <cmt>Country: CH | Altitude: 2165 m</cmt>
+    <desc>Country: CH | Altitude: 2165 m</desc>
+  </wpt>
+  <wpt lat="46.598300000" lon="11.825000000">
+    <ele>0.000</ele>
+    <name>GRÖDNER JOCH</name>
+    <cmt>Alternative name: Passo Gardena / Jof de Frëa | Country: IT | Altitude: 2137 m</cmt>
+    <desc>Alternative name: Passo Gardena / Jof de Frëa | Country: IT | Altitude: 2137 m</desc>
+  </wpt>
+  <wpt lat="47.075000000" lon="12.841700000">
+    <ele>0.000</ele>
+    <name>GROßGLOCKNER HOCHALPENSTRASSE</name>
+    <cmt>Country: AT | Altitude: 2504 m</cmt>
+    <desc>Country: AT | Altitude: 2504 m</desc>
+  </wpt>
+  <wpt lat="47.483300000" lon="10.733300000">
+    <ele>0.000</ele>
+    <name>HAHNTENNJOCH</name>
+    <cmt>Country: AT | Altitude: 1894 m</cmt>
+    <desc>Country: AT | Altitude: 1894 m</desc>
+  </wpt>
+  <wpt lat="47.000000000" lon="8.416700000">
+    <ele>0.000</ele>
+    <name>IBEREREGGPASS</name>
+    <cmt>Country: CH | Altitude: 1406 m</cmt>
+    <desc>Country: CH | Altitude: 1406 m</desc>
+  </wpt>
+  <wpt lat="46.876700000" lon="11.288300000">
+    <ele>0.000</ele>
+    <name>JAUFENPASS</name>
+    <cmt>Alternative name: Passo di Monte Giovo | Country: IT | Altitude: 2094 m</cmt>
+    <desc>Alternative name: Passo di Monte Giovo | Country: IT | Altitude: 2094 m</desc>
+  </wpt>
+  <wpt lat="46.583300000" lon="7.366700000">
+    <ele>0.000</ele>
+    <name>JAUNPASS</name>
+    <cmt>Country: CH | Altitude: 1508 m</cmt>
+    <desc>Country: CH | Altitude: 1508 m</desc>
+  </wpt>
+  <wpt lat="46.498300000" lon="9.730000000">
+    <ele>0.000</ele>
+    <name>JULIERPASS</name>
+    <cmt>Country: CH | Altitude: 2284 m</cmt>
+    <desc>Country: CH | Altitude: 2284 m</desc>
+  </wpt>
+  <wpt lat="46.411700000" lon="11.566700000">
+    <ele>0.000</ele>
+    <name>KARERPASS</name>
+    <cmt>Alternative name: Passo di Costalunga / Jouf de Clareja | Country: IT | Altitude: 1752 m</cmt>
+    <desc>Alternative name: Passo di Costalunga / Jouf de Clareja | Country: IT | Altitude: 1752 m</desc>
+  </wpt>
+  <wpt lat="46.850000000" lon="10.733300000">
+    <ele>0.000</ele>
+    <name>KAUNERTALER GLETSCHERSTRASSE</name>
+    <cmt>Country: AT | Altitude: 2750 m</cmt>
+    <desc>Country: AT | Altitude: 2750 m</desc>
+  </wpt>
+  <wpt lat="47.616700000" lon="11.366700000">
+    <ele>0.000</ele>
+    <name>KESSELBERGSTRAßE</name>
+    <cmt>Country: DE | Altitude: 858 m</cmt>
+    <desc>Country: DE | Altitude: 858 m</desc>
+  </wpt>
+  <wpt lat="46.876700000" lon="8.858300000">
+    <ele>0.000</ele>
+    <name>KLAUSENPASS</name>
+    <cmt>Country: CH | Altitude: 1952 m</cmt>
+    <desc>Country: CH | Altitude: 1952 m</desc>
+  </wpt>
+  <wpt lat="46.650000000" lon="12.483300000">
+    <ele>0.000</ele>
+    <name>KREUZBERGPASS</name>
+    <cmt>Alternative name: Passo di Monte Croce di Comelico | Country: IT | Altitude: 1636 m</cmt>
+    <desc>Alternative name: Passo di Monte Croce di Comelico | Country: IT | Altitude: 1636 m</desc>
+  </wpt>
+  <wpt lat="46.900000000" lon="9.483300000">
+    <ele>0.000</ele>
+    <name>KUNKELSPASS</name>
+    <cmt>Country: CH | Altitude: 1357 m</cmt>
+    <desc>Country: CH | Altitude: 1357 m</desc>
+  </wpt>
+  <wpt lat="45.316700000" lon="6.266700000">
+    <ele>0.000</ele>
+    <name>LACETS DE MONTVERNIER</name>
+    <cmt>Country: FR | Altitude: 790 m</cmt>
+    <desc>Country: FR | Altitude: 790 m</desc>
+  </wpt>
+  <wpt lat="45.083300000" lon="6.100000000">
+    <ele>0.000</ele>
+    <name>LES TRAVERS</name>
+    <cmt>Country: FR | Altitude: 1337 m</cmt>
+    <desc>Country: FR | Altitude: 1337 m</desc>
+  </wpt>
+  <wpt lat="46.433300000" lon="14.283300000">
+    <ele>0.000</ele>
+    <name>LOIBLPASS</name>
+    <cmt>Alternative name: Prelaz Ljubelj | Country: AT/SI | Altitude: 1367 m</cmt>
+    <desc>Alternative name: Prelaz Ljubelj | Country: AT/SI | Altitude: 1367 m</desc>
+  </wpt>
+  <wpt lat="46.616700000" lon="8.816700000">
+    <ele>0.000</ele>
+    <name>LUKMANIERPASS</name>
+    <cmt>Country: CH | Altitude: 1914 m</cmt>
+    <desc>Country: CH | Altitude: 1914 m</desc>
+  </wpt>
+  <wpt lat="46.401700000" lon="9.693300000">
+    <ele>0.000</ele>
+    <name>MALOJAPASS</name>
+    <cmt>Country: CH | Altitude: 1815 m</cmt>
+    <desc>Country: CH | Altitude: 1815 m</desc>
+  </wpt>
+  <wpt lat="47.016700000" lon="13.533300000">
+    <ele>0.000</ele>
+    <name>MALTA HOCHALMSTRASSE</name>
+    <cmt>Country: AT | Altitude: 1925 m</cmt>
+    <desc>Country: AT | Altitude: 1925 m</desc>
+  </wpt>
+  <wpt lat="46.433300000" lon="13.650000000">
+    <ele>0.000</ele>
+    <name>MANGARTSKA CESTA</name>
+    <cmt>Alternative name: Mangart Pass | Country: SI | Altitude: 2067 m</cmt>
+    <desc>Alternative name: Mangart Pass | Country: SI | Altitude: 2067 m</desc>
+  </wpt>
+  <wpt lat="46.483300000" lon="11.133300000">
+    <ele>0.000</ele>
+    <name>MENDELPASS</name>
+    <cmt>Alternative name: Passo della Mendola | Country: IT | Altitude: 1363 m</cmt>
+    <desc>Alternative name: Passo della Mendola | Country: IT | Altitude: 1363 m</desc>
+  </wpt>
+  <wpt lat="46.133300000" lon="6.166700000">
+    <ele>0.000</ele>
+    <name>MONT SALÈVE</name>
+    <cmt>Country: FR | Altitude: 1295 m</cmt>
+    <desc>Country: FR | Altitude: 1295 m</desc>
+  </wpt>
+  <wpt lat="46.500000000" lon="12.900000000">
+    <ele>0.000</ele>
+    <name>MONTE ZONCOLAN</name>
+    <cmt>Country: IT | Altitude: 1750 m</cmt>
+    <desc>Country: IT | Altitude: 1750 m</desc>
+  </wpt>
+  <wpt lat="46.566700000" lon="13.083300000">
+    <ele>0.000</ele>
+    <name>NAßFELDPASS</name>
+    <cmt>Alternative name: Passo di Pramollo | Country: IT/AT | Altitude: 1530 m</cmt>
+    <desc>Alternative name: Passo di Pramollo | Country: IT/AT | Altitude: 1530 m</desc>
+  </wpt>
+  <wpt lat="46.516700000" lon="11.583300000">
+    <ele>0.000</ele>
+    <name>NIGERPASS</name>
+    <cmt>Alternative name: Passo Nigra | Country: IT | Altitude: 1690 m</cmt>
+    <desc>Alternative name: Passo Nigra | Country: IT | Altitude: 1690 m</desc>
+  </wpt>
+  <wpt lat="46.933300000" lon="13.750000000">
+    <ele>0.000</ele>
+    <name>NOCKALMSTRASSE</name>
+    <cmt>Alternative name: Eisentalshöhe | Country: AT | Altitude: 2049 m</cmt>
+    <desc>Alternative name: Eisentalshöhe | Country: AT | Altitude: 2049 m</desc>
+  </wpt>
+  <wpt lat="46.476700000" lon="8.378300000">
+    <ele>0.000</ele>
+    <name>NUFENENPASS</name>
+    <cmt>Alternative name: Passo della Novena | Country: CH | Altitude: 2478 m</cmt>
+    <desc>Alternative name: Passo della Novena | Country: CH | Altitude: 2478 m</desc>
+  </wpt>
+  <wpt lat="46.658300000" lon="8.678300000">
+    <ele>0.000</ele>
+    <name>OBERALPPASS</name>
+    <cmt>Country: CH | Altitude: 2046 m</cmt>
+    <desc>Country: CH | Altitude: 2046 m</desc>
+  </wpt>
+  <wpt lat="47.516700000" lon="10.466700000">
+    <ele>0.000</ele>
+    <name>OBERJOCHPASS</name>
+    <cmt>Country: AT | Altitude: 1176 m</cmt>
+    <desc>Country: AT | Altitude: 1176 m</desc>
+  </wpt>
+  <wpt lat="46.916700000" lon="10.933300000">
+    <ele>0.000</ele>
+    <name>ÖTZTALER GLETSCHERSTRASSE</name>
+    <cmt>Country: AT | Altitude: 2830 m</cmt>
+    <desc>Country: AT | Altitude: 2830 m</desc>
+  </wpt>
+  <wpt lat="46.558300000" lon="8.365000000">
+    <ele>0.000</ele>
+    <name>PANORAMASTRASSE OBERAAR</name>
+    <cmt>Country: CH | Altitude: 2388 m</cmt>
+    <desc>Country: CH | Altitude: 2388 m</desc>
+  </wpt>
+  <wpt lat="45.083300000" lon="6.150000000">
+    <ele>0.000</ele>
+    <name>PAS DE LA CONFESSION</name>
+    <cmt>Country: FR | Altitude: 1859 m</cmt>
+    <desc>Country: FR | Altitude: 1859 m</desc>
+  </wpt>
+  <wpt lat="43.916700000" lon="7.133300000">
+    <ele>0.000</ele>
+    <name>PAS DE L'ESCOUS</name>
+    <cmt>Country: FR | Altitude: 1372 m</cmt>
+    <desc>Country: FR | Altitude: 1372 m</desc>
+  </wpt>
+  <wpt lat="43.816700000" lon="6.916700000">
+    <ele>0.000</ele>
+    <name>PAS DE TOUS VENTS</name>
+    <cmt>Alternative name: Clue de Gréolières | Country: FR | Altitude: 1179 m</cmt>
+    <desc>Alternative name: Clue de Gréolières | Country: FR | Altitude: 1179 m</desc>
+  </wpt>
+  <wpt lat="46.631700000" lon="10.295000000">
+    <ele>0.000</ele>
+    <name>PASS DAL FUORN</name>
+    <cmt>Alternative name: Ofenpass | Country: CH | Altitude: 2149 m</cmt>
+    <desc>Alternative name: Ofenpass | Country: CH | Altitude: 2149 m</desc>
+  </wpt>
+  <wpt lat="46.050000000" lon="8.916700000">
+    <ele>0.000</ele>
+    <name>PASSO AGROGLIO</name>
+    <cmt>Country: IT | Altitude: 1148 m</cmt>
+    <desc>Country: IT | Altitude: 1148 m</desc>
+  </wpt>
+  <wpt lat="46.533300000" lon="11.883300000">
+    <ele>0.000</ele>
+    <name>PASSO CAMPOLONGO</name>
+    <cmt>Alternative name: Joc de Ciaulonch | Country: IT | Altitude: 1875 m</cmt>
+    <desc>Alternative name: Joc de Ciaulonch | Country: IT | Altitude: 1875 m</desc>
+  </wpt>
+  <wpt lat="45.866700000" lon="10.316700000">
+    <ele>0.000</ele>
+    <name>PASSO CROCEDOMINI</name>
+    <cmt>Country: IT | Altitude: 1895 m</cmt>
+    <desc>Country: IT | Altitude: 1895 m</desc>
+  </wpt>
+  <wpt lat="45.883300000" lon="10.350000000">
+    <ele>0.000</ele>
+    <name>PASSO DASDANA</name>
+    <cmt>Country: IT | Altitude: 2138 m</cmt>
+    <desc>Country: IT | Altitude: 2138 m</desc>
+  </wpt>
+  <wpt lat="46.550000000" lon="10.300000000">
+    <ele>0.000</ele>
+    <name>PASSO DEL FOSCAGNO</name>
+    <cmt>Alternative name: Passo del Foscagno | Country: IT | Altitude: 2291 m</cmt>
+    <desc>Alternative name: Passo del Foscagno | Country: IT | Altitude: 2291 m</desc>
+  </wpt>
+  <wpt lat="46.266700000" lon="10.316700000">
+    <ele>0.000</ele>
+    <name>PASSO DEL MORTIROLO</name>
+    <cmt>Country: IT | Altitude: 1896 m</cmt>
+    <desc>Country: IT | Altitude: 1896 m</desc>
+  </wpt>
+  <wpt lat="46.033300000" lon="10.200000000">
+    <ele>0.000</ele>
+    <name>PASSO DEL VIVIONE</name>
+    <cmt>Country: IT | Altitude: 1827 m</cmt>
+    <desc>Country: IT | Altitude: 1827 m</desc>
+  </wpt>
+  <wpt lat="45.916700000" lon="11.183300000">
+    <ele>0.000</ele>
+    <name>PASSO DELLA BORCOLA</name>
+    <cmt>Country: IT | Altitude: 1250 m</cmt>
+    <desc>Country: IT | Altitude: 1250 m</desc>
+  </wpt>
+  <wpt lat="45.800000000" lon="8.833300000">
+    <ele>0.000</ele>
+    <name>PASSO DELLA COLMA</name>
+    <cmt>Country: IT | Altitude: 942 m</cmt>
+    <desc>Country: IT | Altitude: 942 m</desc>
+  </wpt>
+  <wpt lat="46.500000000" lon="12.683300000">
+    <ele>0.000</ele>
+    <name>PASSO DELLA MAURIA</name>
+    <cmt>Country: IT | Altitude: 1298 m</cmt>
+    <desc>Country: IT | Altitude: 1298 m</desc>
+  </wpt>
+  <wpt lat="43.916700000" lon="7.783300000">
+    <ele>0.000</ele>
+    <name>PASSO DELLA TEGLIA</name>
+    <cmt>Country: IT | Altitude: 1385 m</cmt>
+    <desc>Country: IT | Altitude: 1385 m</desc>
+  </wpt>
+  <wpt lat="45.533300000" lon="11.633300000">
+    <ele>0.000</ele>
+    <name>PASSO DELLA VENA</name>
+    <cmt>Country: IT | Altitude: 893 m</cmt>
+    <desc>Country: IT | Altitude: 893 m</desc>
+  </wpt>
+  <wpt lat="45.783300000" lon="8.800000000">
+    <ele>0.000</ele>
+    <name>PASSO DELLO SCIOPELLO</name>
+    <cmt>Country: IT | Altitude: 968 m</cmt>
+    <desc>Country: IT | Altitude: 968 m</desc>
+  </wpt>
+  <wpt lat="45.883300000" lon="9.550000000">
+    <ele>0.000</ele>
+    <name>PASSO DI VALCAVA</name>
+    <cmt>Country: IT | Altitude: 1340 m</cmt>
+    <desc>Country: IT | Altitude: 1340 m</desc>
+  </wpt>
+  <wpt lat="46.533300000" lon="11.966700000">
+    <ele>0.000</ele>
+    <name>PASSO DI VALPAROLA</name>
+    <cmt>Country: IT | Altitude: 2192 m</cmt>
+    <desc>Country: IT | Altitude: 2192 m</desc>
+  </wpt>
+  <wpt lat="45.950000000" lon="9.800000000">
+    <ele>0.000</ele>
+    <name>PASSO DI ZAMBLA</name>
+    <cmt>Country: IT | Altitude: 2005 m</cmt>
+    <desc>Country: IT | Altitude: 2005 m</desc>
+  </wpt>
+  <wpt lat="46.518300000" lon="11.981700000">
+    <ele>0.000</ele>
+    <name>PASSO FALZAREGO</name>
+    <cmt>Alternative name: Joc de Fauzère | Country: IT | Altitude: 2195 m</cmt>
+    <desc>Alternative name: Joc de Fauzère | Country: IT | Altitude: 2195 m</desc>
+  </wpt>
+  <wpt lat="46.466700000" lon="11.883300000">
+    <ele>0.000</ele>
+    <name>PASSO FEDAIA</name>
+    <cmt>Alternative name: Jouf de Fedas | Country: IT | Altitude: 2057 m</cmt>
+    <desc>Alternative name: Jouf de Fedas | Country: IT | Altitude: 2057 m</desc>
+  </wpt>
+  <wpt lat="45.683300000" lon="11.133300000">
+    <ele>0.000</ele>
+    <name>PASSO FITTANZE DELLA SEGA</name>
+    <cmt>Country: IT | Altitude: 1393 m</cmt>
+    <desc>Country: IT | Altitude: 1393 m</desc>
+  </wpt>
+  <wpt lat="46.346700000" lon="10.490000000">
+    <ele>0.000</ele>
+    <name>PASSO GAVIA</name>
+    <cmt>Country: IT | Altitude: 2652 m</cmt>
+    <desc>Country: IT | Altitude: 2652 m</desc>
+  </wpt>
+  <wpt lat="46.480000000" lon="12.043300000">
+    <ele>0.000</ele>
+    <name>PASSO GIAU</name>
+    <cmt>Alternative name: Jof de Giau | Country: IT | Altitude: 2236 m</cmt>
+    <desc>Alternative name: Jof de Giau | Country: IT | Altitude: 2236 m</desc>
+  </wpt>
+  <wpt lat="46.183300000" lon="11.333300000">
+    <ele>0.000</ele>
+    <name>PASSO MANGHEN</name>
+    <cmt>Country: IT | Altitude: 2042 m</cmt>
+    <desc>Country: IT | Altitude: 2042 m</desc>
+  </wpt>
+  <wpt lat="46.500000000" lon="12.916700000">
+    <ele>0.000</ele>
+    <name>PASSO PURA</name>
+    <cmt>Country: IT | Altitude: 1428 m</cmt>
+    <desc>Country: IT | Altitude: 1428 m</desc>
+  </wpt>
+  <wpt lat="46.516700000" lon="12.883300000">
+    <ele>0.000</ele>
+    <name>PASSO REST</name>
+    <cmt>Country: IT | Altitude: 1052 m</cmt>
+    <desc>Country: IT | Altitude: 1052 m</desc>
+  </wpt>
+  <wpt lat="46.298300000" lon="11.788300000">
+    <ele>0.000</ele>
+    <name>PASSO ROLLE</name>
+    <cmt>Country: IT | Altitude: 1984 m</cmt>
+    <desc>Country: IT | Altitude: 1984 m</desc>
+  </wpt>
+  <wpt lat="46.066700000" lon="12.183300000">
+    <ele>0.000</ele>
+    <name>PASSO SAN BOLDO</name>
+    <cmt>Country: IT | Altitude: 706 m</cmt>
+    <desc>Country: IT | Altitude: 706 m</desc>
+  </wpt>
+  <wpt lat="45.983300000" lon="9.850000000">
+    <ele>0.000</ele>
+    <name>PASSO SAN MARCO</name>
+    <cmt>Country: IT | Altitude: 1992 m</cmt>
+    <desc>Country: IT | Altitude: 1992 m</desc>
+  </wpt>
+  <wpt lat="45.433300000" lon="10.866700000">
+    <ele>0.000</ele>
+    <name>PASSO SAN ROCCO</name>
+    <cmt>Country: IT | Altitude: 949 m</cmt>
+    <desc>Country: IT | Altitude: 949 m</desc>
+  </wpt>
+  <wpt lat="46.433300000" lon="13.500000000">
+    <ele>0.000</ele>
+    <name>PASSO SELLA NEVEA</name>
+    <cmt>Country: IT | Altitude: 1190 m</cmt>
+    <desc>Country: IT | Altitude: 1190 m</desc>
+  </wpt>
+  <wpt lat="46.583300000" lon="12.216700000">
+    <ele>0.000</ele>
+    <name>PASSO TRE CROCI</name>
+    <cmt>Country: IT | Altitude: 1809 m</cmt>
+    <desc>Country: IT | Altitude: 1809 m</desc>
+  </wpt>
+  <wpt lat="46.333300000" lon="11.883300000">
+    <ele>0.000</ele>
+    <name>PASSO VALLES</name>
+    <cmt>Country: IT | Altitude: 2032 m</cmt>
+    <desc>Country: IT | Altitude: 2032 m</desc>
+  </wpt>
+  <wpt lat="46.773300000" lon="11.398300000">
+    <ele>0.000</ele>
+    <name>PENSER JOCH</name>
+    <cmt>Alternative name: Passo Pennes | Country: IT | Altitude: 2211 m</cmt>
+    <desc>Alternative name: Passo Pennes | Country: IT | Altitude: 2211 m</desc>
+  </wpt>
+  <wpt lat="45.750000000" lon="11.216700000">
+    <ele>0.000</ele>
+    <name>PIAN DELLE FUGAZZE</name>
+    <cmt>Country: IT | Altitude: 1163 m</cmt>
+    <desc>Country: IT | Altitude: 1163 m</desc>
+  </wpt>
+  <wpt lat="46.616700000" lon="12.950000000">
+    <ele>0.000</ele>
+    <name>PLÖCKENPASS</name>
+    <cmt>Alternative name: Passo di Monte Croce Carnico | Country: AT/IT | Altitude: 1357 m</cmt>
+    <desc>Alternative name: Passo di Monte Croce Carnico | Country: AT/IT | Altitude: 1357 m</desc>
+  </wpt>
+  <wpt lat="46.496700000" lon="11.821700000">
+    <ele>0.000</ele>
+    <name>PORDELOICH</name>
+    <cmt>Alternative name: Passo Pordei / Jouf de Pordei | Country: IT | Altitude: 2239 m</cmt>
+    <desc>Alternative name: Passo Pordei / Jouf de Pordei | Country: IT | Altitude: 2239 m</desc>
+  </wpt>
+  <wpt lat="47.816700000" lon="13.233300000">
+    <ele>0.000</ele>
+    <name>POSTALMSTRASSE</name>
+    <cmt>Alternative name: Lienbachsattel | Country: AT | Altitude: 1550 m</cmt>
+    <desc>Alternative name: Lienbachsattel | Country: AT | Altitude: 1550 m</desc>
+  </wpt>
+  <wpt lat="47.016700000" lon="8.950000000">
+    <ele>0.000</ele>
+    <name>PRAGELPASS</name>
+    <cmt>Country: CH | Altitude: 1550 m</cmt>
+    <desc>Country: CH | Altitude: 1550 m</desc>
+  </wpt>
+  <wpt lat="46.848300000" lon="10.511700000">
+    <ele>0.000</ele>
+    <name>RESCHENPASS</name>
+    <cmt>Alternative name: Passo di Resia | Country: AT/IT | Altitude: 1455 m</cmt>
+    <desc>Alternative name: Passo di Resia | Country: AT/IT | Altitude: 1455 m</desc>
+  </wpt>
+  <wpt lat="47.483300000" lon="10.183300000">
+    <ele>0.000</ele>
+    <name>RIEDBERGPASS</name>
+    <cmt>Country: DE | Altitude: 1409 m</cmt>
+    <desc>Country: DE | Altitude: 1409 m</desc>
+  </wpt>
+  <wpt lat="47.633300000" lon="13.050000000">
+    <ele>0.000</ele>
+    <name>ROßFELD PANORAMASTRASSE</name>
+    <cmt>Country: DE | Altitude: 1560 m</cmt>
+    <desc>Country: DE | Altitude: 1560 m</desc>
+  </wpt>
+  <wpt lat="43.883300000" lon="7.300000000">
+    <ele>0.000</ele>
+    <name>ROUTE DE DURANUS</name>
+    <cmt>Country: FR | Altitude: 521 m</cmt>
+    <desc>Country: FR | Altitude: 521 m</desc>
+  </wpt>
+  <wpt lat="44.950000000" lon="6.316700000">
+    <ele>0.000</ele>
+    <name>ROUTE DE LA BÉRARDE</name>
+    <cmt>Country: FR | Altitude: 1718 m</cmt>
+    <desc>Country: FR | Altitude: 1718 m</desc>
+  </wpt>
+  <wpt lat="45.083300000" lon="6.133300000">
+    <ele>0.000</ele>
+    <name>ROUTE DE LA ROCHE D'AURIS</name>
+    <cmt>Country: FR | Altitude: 1353 m</cmt>
+    <desc>Country: FR | Altitude: 1353 m</desc>
+  </wpt>
+  <wpt lat="46.516700000" lon="7.066700000">
+    <ele>0.000</ele>
+    <name>ROUTE DE L'HONGRIN</name>
+    <cmt>Country: CH | Altitude: 1543 m</cmt>
+    <desc>Country: CH | Altitude: 1543 m</desc>
+  </wpt>
+  <wpt lat="46.416700000" lon="7.016700000">
+    <ele>0.000</ele>
+    <name>ROUTE DE L'HONGRIN (LES MOSSES)</name>
+    <cmt>Country: FR | Altitude: 1003 m</cmt>
+    <desc>Country: FR | Altitude: 1003 m</desc>
+  </wpt>
+  <wpt lat="45.083300000" lon="6.100000000">
+    <ele>0.000</ele>
+    <name>ROUTE DE SALETTE</name>
+    <cmt>Country: FR | Altitude: 1755 m</cmt>
+    <desc>Country: FR | Altitude: 1755 m</desc>
+  </wpt>
+  <wpt lat="45.116700000" lon="5.466700000">
+    <ele>0.000</ele>
+    <name>ROUTE DES ÉCOUGES</name>
+    <cmt>Country: FR | Altitude: 1063 m</cmt>
+    <desc>Country: FR | Altitude: 1063 m</desc>
+  </wpt>
+  <wpt lat="45.783300000" lon="10.700000000">
+    <ele>0.000</ele>
+    <name>SALTO DELLA CAPRA</name>
+    <cmt>Country: IT | Altitude: 1304 m</cmt>
+    <desc>Country: IT | Altitude: 1304 m</desc>
+  </wpt>
+  <wpt lat="46.491700000" lon="9.166700000">
+    <ele>0.000</ele>
+    <name>SAN BERNARDINO-PASS</name>
+    <cmt>Alternative name: Passo del San Bernardino | Country: CH | Altitude: 2066 m</cmt>
+    <desc>Alternative name: Passo del San Bernardino | Country: CH | Altitude: 2066 m</desc>
+  </wpt>
+  <wpt lat="47.083300000" lon="8.766700000">
+    <ele>0.000</ele>
+    <name>SATTELEGGPASS</name>
+    <cmt>Country: CH | Altitude: 1190 m</cmt>
+    <desc>Country: CH | Altitude: 1190 m</desc>
+  </wpt>
+  <wpt lat="47.050000000" lon="11.733300000">
+    <ele>0.000</ele>
+    <name>SCHLEGEISALPENSTRASSE</name>
+    <cmt>Country: AT | Altitude: 1786 m</cmt>
+    <desc>Country: AT | Altitude: 1786 m</desc>
+  </wpt>
+  <wpt lat="46.433300000" lon="14.566700000">
+    <ele>0.000</ele>
+    <name>SEEBERGSATTEL</name>
+    <cmt>Alternative name: Jezerski vrh | Country: AT/SI | Altitude: 1218 m</cmt>
+    <desc>Alternative name: Jezerski vrh | Country: AT/SI | Altitude: 1218 m</desc>
+  </wpt>
+  <wpt lat="46.550000000" lon="12.200000000">
+    <ele>0.000</ele>
+    <name>SELLA DI RIODA</name>
+    <cmt>Country: IT | Altitude: 1800 m</cmt>
+    <desc>Country: IT | Altitude: 1800 m</desc>
+  </wpt>
+  <wpt lat="46.505000000" lon="11.758300000">
+    <ele>0.000</ele>
+    <name>SELLAJOCH</name>
+    <cmt>Alternative name: Passo Sella / Jouf de Sela | Country: IT | Altitude: 2244 m</cmt>
+    <desc>Alternative name: Passo Sella / Jouf de Sela | Country: IT | Altitude: 2244 m</desc>
+  </wpt>
+  <wpt lat="46.968300000" lon="10.131700000">
+    <ele>0.000</ele>
+    <name>SILVRETTA HOCHALPENSTRASSE</name>
+    <cmt>Country: AT | Altitude: 2032 m</cmt>
+    <desc>Country: AT | Altitude: 2032 m</desc>
+  </wpt>
+  <wpt lat="46.250000000" lon="8.050000000">
+    <ele>0.000</ele>
+    <name>SIMPLONPASS</name>
+    <cmt>Country: CH | Altitude: 2005 m</cmt>
+    <desc>Country: CH | Altitude: 2005 m</desc>
+  </wpt>
+  <wpt lat="47.366700000" lon="14.083300000">
+    <ele>0.000</ele>
+    <name>SÖLKPASS</name>
+    <cmt>Country: AT | Altitude: 1790 m</cmt>
+    <desc>Country: AT | Altitude: 1790 m</desc>
+  </wpt>
+  <wpt lat="46.503300000" lon="9.345000000">
+    <ele>0.000</ele>
+    <name>SPLÜGENPASS</name>
+    <cmt>Alternative name: Passo della Spluga | Country: CH/IT | Altitude: 2117 m</cmt>
+    <desc>Alternative name: Passo della Spluga | Country: CH/IT | Altitude: 2117 m</desc>
+  </wpt>
+  <wpt lat="46.900000000" lon="12.233300000">
+    <ele>0.000</ele>
+    <name>STALLER SATTEL</name>
+    <cmt>Country: AT/IT | Altitude: 2052 m</cmt>
+    <desc>Country: AT/IT | Altitude: 2052 m</desc>
+  </wpt>
+  <wpt lat="46.526700000" lon="10.453300000">
+    <ele>0.000</ele>
+    <name>STILFSER JOCH</name>
+    <cmt>Alternative name: Passo dello Stelvio | Country: IT | Altitude: 2757 m</cmt>
+    <desc>Alternative name: Passo dello Stelvio | Country: IT | Altitude: 2757 m</desc>
+  </wpt>
+  <wpt lat="47.666700000" lon="14.166700000">
+    <ele>0.000</ele>
+    <name>STODERZINKEN ALPENSTRASSE</name>
+    <cmt>Country: AT | Altitude: 1824 m</cmt>
+    <desc>Country: AT | Altitude: 1824 m</desc>
+  </wpt>
+  <wpt lat="46.416700000" lon="10.066700000">
+    <ele>0.000</ele>
+    <name>STRADA DEL ALPE GERA</name>
+    <cmt>Country: IT | Altitude: 2104 m</cmt>
+    <desc>Country: IT | Altitude: 2104 m</desc>
+  </wpt>
+  <wpt lat="45.816700000" lon="10.866700000">
+    <ele>0.000</ele>
+    <name>STRADA DEL MENADOR</name>
+    <cmt>Country: IT | Altitude: 1266 m</cmt>
+    <desc>Country: IT | Altitude: 1266 m</desc>
+  </wpt>
+  <wpt lat="45.750000000" lon="10.933300000">
+    <ele>0.000</ele>
+    <name>STRADA DEL PIOVAN</name>
+    <cmt>Country: IT | Altitude: 1617 m</cmt>
+    <desc>Country: IT | Altitude: 1617 m</desc>
+  </wpt>
+  <wpt lat="45.866700000" lon="10.750000000">
+    <ele>0.000</ele>
+    <name>STRADA DELLA FORRA</name>
+    <cmt>Country: IT | Altitude: 401 m</cmt>
+    <desc>Country: IT | Altitude: 401 m</desc>
+  </wpt>
+  <wpt lat="45.733300000" lon="10.816700000">
+    <ele>0.000</ele>
+    <name>STRADA PANORAMICA DEL MONTE BALDO</name>
+    <cmt>Alternative name: Bocca del Creer | Country: IT | Altitude: 1617 m</cmt>
+    <desc>Alternative name: Bocca del Creer | Country: IT | Altitude: 1617 m</desc>
+  </wpt>
+  <wpt lat="47.683300000" lon="12.016700000">
+    <ele>0.000</ele>
+    <name>SUDELFELD PASS</name>
+    <cmt>Country: DE | Altitude: 1123 m</cmt>
+    <desc>Country: DE | Altitude: 1123 m</desc>
+  </wpt>
+  <wpt lat="46.731700000" lon="8.443300000">
+    <ele>0.000</ele>
+    <name>SUSTENPASS</name>
+    <cmt>Country: CH | Altitude: 2224 m</cmt>
+    <desc>Country: CH | Altitude: 2224 m</desc>
+  </wpt>
+  <wpt lat="46.933300000" lon="11.133300000">
+    <ele>0.000</ele>
+    <name>TIMMELSJOCH</name>
+    <cmt>Alternative name: Passo del Rombo | Country: AT/IT | Altitude: 2509 m</cmt>
+    <desc>Alternative name: Passo del Rombo | Country: AT/IT | Altitude: 2509 m</desc>
+  </wpt>
+  <wpt lat="46.550000000" lon="10.316700000">
+    <ele>0.000</ele>
+    <name>TORRI DI FRAELE</name>
+    <cmt>Country: IT | Altitude: 1941 m</cmt>
+    <desc>Country: IT | Altitude: 1941 m</desc>
+  </wpt>
+  <wpt lat="46.616700000" lon="12.300000000">
+    <ele>0.000</ele>
+    <name>TRE CIME DI LAVAREDO</name>
+    <cmt>Country: IT | Altitude: 2333 m</cmt>
+    <desc>Country: IT | Altitude: 2333 m</desc>
+  </wpt>
+  <wpt lat="46.613300000" lon="10.431700000">
+    <ele>0.000</ele>
+    <name>UMBRAILPASS</name>
+    <cmt>Alternative name: Giogo di Santa Maria | Country: CH/IT | Altitude: 2503 m</cmt>
+    <desc>Alternative name: Giogo di Santa Maria | Country: CH/IT | Altitude: 2503 m</desc>
+  </wpt>
+  <wpt lat="46.566700000" lon="8.683300000">
+    <ele>0.000</ele>
+    <name>VAL SAMBUCO</name>
+    <cmt>Alternative name: Lago del Narèt | Country: CH | Altitude: 2312 m</cmt>
+    <desc>Alternative name: Lago del Narèt | Country: CH | Altitude: 2312 m</desc>
+  </wpt>
+  <wpt lat="45.966700000" lon="11.133300000">
+    <ele>0.000</ele>
+    <name>VALICO VALBONA + PASSO COE</name>
+    <cmt>Country: IT | Altitude: 1781 m</cmt>
+    <desc>Country: IT | Altitude: 1781 m</desc>
+  </wpt>
+  <wpt lat="45.883300000" lon="11.833300000">
+    <ele>0.000</ele>
+    <name>VIA VAL FRANZELA</name>
+    <cmt>Alternative name: Col Piangrande | Country: IT | Altitude: 1085 m</cmt>
+    <desc>Alternative name: Col Piangrande | Country: IT | Altitude: 1085 m</desc>
+  </wpt>
+  <wpt lat="46.433300000" lon="13.740000000">
+    <ele>0.000</ele>
+    <name>VRŠIŠKA CESTA</name>
+    <cmt>Alternative name: Vršič Pass | Country: SI | Altitude: 1611 m</cmt>
+    <desc>Alternative name: Vršič Pass | Country: SI | Altitude: 1611 m</desc>
+  </wpt>
+  <wpt lat="46.731700000" lon="11.916700000">
+    <ele>0.000</ele>
+    <name>WÜRZJOCH</name>
+    <cmt>Alternative name: Passo delle Erbe / Ju de Börz | Country: IT | Altitude: 1987 m</cmt>
+    <desc>Alternative name: Passo delle Erbe / Ju de Börz | Country: IT | Altitude: 1987 m</desc>
+  </wpt>
+</gpx>
