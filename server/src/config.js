@@ -12,12 +12,18 @@ const excludedDirs = fs.existsSync(excludeFile)
   ? new Set(JSON.parse(fs.readFileSync(excludeFile, 'utf8')).map(d => d.toLowerCase()))
   : new Set();
 
+const excludePhotoPrefixes = (process.env.EXCLUDE_PHOTO_PREFIXES || 'DSC')
+  .split(',')
+  .map(p => p.trim().toUpperCase())
+  .filter(Boolean);
+
 export default {
   videoDir: process.env.VIDEO_DIR || '\\\\babel\\Alpes',
   port: parseInt(process.env.PORT, 10) || 3001,
   cacheDir: path.resolve(__dirname, '../cache-data'),
   metadataDir: path.resolve(__dirname, '../cache-data/metadata'),
   thumbnailDir: path.resolve(__dirname, '../cache-data/thumbnails'),
-  passesDir: path.resolve(__dirname, '../../../passes'),
+  passesDir: path.resolve(__dirname, '../../passes'),
   excludedDirs,
+  excludePhotoPrefixes,
 };

@@ -11,3 +11,4 @@ export const getThumbnailUrl = (id) => `/api/media/${id}/thumbnail`;
 export const getKmlUrl = (id) => `/api/media/${id}/export.kml`;
 export const fetchPassFiles = () => api.get('/passes').then(r => r.data);
 export const fetchPassWaypoints = (id) => api.get(`/passes/${id}`).then(r => r.data);
+export const fetchAllPassWaypoints = () => api.get('/passes/all').then(r => r.data);

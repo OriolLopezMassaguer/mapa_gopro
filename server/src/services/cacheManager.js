@@ -57,14 +57,15 @@ function fingerprintMatches(entry, file) {
   return Math.abs(new Date(entry.lastModified).getTime() - new Date(file.lastModified).getTime()) < 1000;
 }
 
-// Scan all cache JSON files to find one matching by fingerprint (for relocation detection).
-// Returns { entry, oldId } or null.
-function findCacheByFingerprint(file) {
+// Load all existing cache entries into memory once, keyed by fingerprint "filename|size|mtime".
+// Used to detect relocated files without re-scanning disk on every miss.
+function loadFingerprintIndex() {
+  const index = new Map(); // fingerprint -> { entry, oldId }
   let dir;
   try {
     dir = fs.readdirSync(config.metadataDir, { recursive: true });
   } catch {
-    return null;
+    return index;
   }
   for (const name of dir) {
     if (!name.endsWith('.json')) continue;
@@ -75,10 +76,15 @@ function findCacheByFingerprint(file) {
     } catch {
       continue;
     }
-    if (fingerprintMatches(entry, file)) {
-      const oldId = entry.id;
-      return { entry, oldId };
-    }
+    const key = `${entry.filename}|${entry.fileSize}|${new Date(entry.lastModified).getTime()}`;
+    index.set(key, { entry, oldId: entry.id });
+  }
+  return index;
+}
+
+function findCacheByFingerprint(file, fingerprintIndex) {
+  for (const [, value] of fingerprintIndex) {
+    if (fingerprintMatches(value.entry, file)) return value;
   }
   return null;
 }
@@ -91,11 +97,23 @@ function withTimeout(promise, ms) {
 }
 
 async function processVideo(file, prefix) {
-  console.log(`${prefix} Extracting GPS from video: ${file.relativePath} (${(file.fileSize / 1e9).toFixed(2)} GB)`);
-
+  const sizeGb = (file.fileSize / 1e9).toFixed(2);
   // Scale timeout with file size: 120s base + 30s per GB
   const timeoutMs = Math.max(120_000, 120_000 + Math.ceil(file.fileSize / 1e9) * 30_000);
-  const telemetry = await withTimeout(extractVideoTelemetry(file.filepath), timeoutMs);
+  console.log(`${prefix} Extracting GPS from video: ${file.relativePath} (${sizeGb} GB, timeout: ${timeoutMs / 1000}s)`);
+
+  const startMs = Date.now();
+  const heartbeat = setInterval(() => {
+    console.log(`${prefix}   ... still extracting ${file.filename} (${Math.round((Date.now() - startMs) / 1000)}s elapsed)`);
+  }, 15_000);
+
+  let telemetry;
+  try {
+    telemetry = await withTimeout(extractVideoTelemetry(file.filepath), timeoutMs);
+  } finally {
+    clearInterval(heartbeat);
+  }
+  console.log(`${prefix} Extraction done in ${((Date.now() - startMs) / 1000).toFixed(1)}s`);
 
   if (telemetry) {
     const entry = {
@@ -212,6 +230,11 @@ export async function initializeCache() {
   let noGps = 0;
   let errors = 0;
 
+  // Load all existing cache entries once for relocation detection (avoids O(n²) disk reads).
+  console.log('Loading cache fingerprint index…');
+  const fingerprintIndex = loadFingerprintIndex();
+  console.log(`Fingerprint index loaded: ${fingerprintIndex.size} entries`);
+
   // Resolve cache hits synchronously first (fast — just JSON reads).
   const toProcess = [];
   for (const file of mediaFiles) {
@@ -229,8 +252,8 @@ export async function initializeCache() {
       continue;
     }
 
-    // Path-based miss — search all cache files by fingerprint to detect relocation
-    const relocated = findCacheByFingerprint(file);
+    // Path-based miss — search fingerprint index to detect relocation
+    const relocated = findCacheByFingerprint(file, fingerprintIndex);
     if (relocated) {
       const { entry: oldEntry, oldId } = relocated;
       console.log(`Relocated: ${oldEntry.relativePath} -> ${file.relativePath}`);
@@ -304,6 +327,7 @@ export function getMediaItems() {
       filename: v.filename,
       subfolder: v.subfolder,
       type: v.type,
+      camera: v.camera || null,
       startPoint: v.startPoint,
       endPoint: v.endPoint || null,
       duration: v.duration || null,
@@ -331,6 +355,7 @@ export function getAllMediaItems() {
       subfolder: v.subfolder,
       relativePath: v.relativePath,
       type: v.type,
+      camera: v.camera || null,
       fileSize: v.fileSize,
       lastModified: v.lastModified,
       noGps: v.noGps || false,

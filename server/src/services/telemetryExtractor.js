@@ -66,6 +66,9 @@ function extractGpmfChunked(filePath) {
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
     const chunkSize = 64 * 1024 * 1024; // 64 MB chunks — fewer iterations than 2 MB
+    const filename = filePath.split(/[\\/]/).pop();
+
+    console.log(`  [chunked] ${filename}: ${(fileSize / 1e9).toFixed(2)} GB, ${Math.ceil(fileSize / chunkSize)} chunks`);
 
     const mp4boxFile = MP4Box.createFile();
     let trackId = null;
@@ -73,10 +76,14 @@ function extractGpmfChunked(filePath) {
     const timing = {};
     let offset = 0;
     let done = false;
+    let chunksRead = 0;
+    const totalChunks = Math.ceil(fileSize / chunkSize);
 
     mp4boxFile.onError = reject;
 
     mp4boxFile.onReady = function (videoData) {
+      const trackSummary = videoData.tracks.map(t => `${t.codec}(${t.nb_samples})`).join(', ');
+      console.log(`  [chunked] ${filename}: mp4box ready — tracks: ${trackSummary}`);
       let foundVideo = false;
       for (const track of videoData.tracks) {
         if (track.codec === 'gpmd') {
@@ -108,6 +115,7 @@ function extractGpmfChunked(filePath) {
         rawDataArr.push(sample.data);
         timingSamples.push({ cts: sample.cts, duration: sample.duration });
       }
+      console.log(`  [chunked] ${filename}: samples received ${rawDataArr.length}/${nb_samples}`);
       // Wait until all expected samples have arrived before resolving
       if (nb_samples > 0 && rawDataArr.length < nb_samples) return;
 
@@ -140,40 +148,45 @@ function extractGpmfChunked(filePath) {
       }
     }
 
-    // Read file in chunks and feed to mp4box
-    const fd = fs.openSync(filePath, 'r');
-    function readNextChunk() {
-      // Stop immediately if onSamples already resolved the promise
-      if (done) {
-        try { fs.closeSync(fd); } catch {}
-        return;
-      }
-      if (offset >= fileSize) {
-        try { fs.closeSync(fd); } catch {}
-        mp4boxFile.flush();
-        if (!done) resolveFromAccumulated();
-        return;
-      }
-      const end = Math.min(offset + chunkSize, fileSize);
-      const buf = Buffer.alloc(end - offset);
-      fs.readSync(fd, buf, 0, buf.length, offset);
+    // Read file in chunks and feed to mp4box (async to avoid blocking the event loop on network shares)
+    fs.promises.open(filePath, 'r').then(fh => {
+      async function readNextChunk() {
+        // Stop immediately if onSamples already resolved the promise
+        if (done) {
+          await fh.close().catch(() => {});
+          return;
+        }
+        if (offset >= fileSize) {
+          await fh.close().catch(() => {});
+          mp4boxFile.flush();
+          if (!done) resolveFromAccumulated();
+          return;
+        }
+        const end = Math.min(offset + chunkSize, fileSize);
+        const buf = Buffer.alloc(end - offset);
+        chunksRead++;
+        if (chunksRead === 1 || chunksRead % 5 === 0 || chunksRead === totalChunks) {
+          console.log(`  [chunked] ${filename}: chunk ${chunksRead}/${totalChunks} (${(offset / 1e9).toFixed(2)} GB)`);
+        }
+        await fh.read(buf, 0, buf.length, offset);
 
-      const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-      ab.fileStart = offset;
-      mp4boxFile.appendBuffer(ab);
-      // Always advance by what we actually read — do NOT use appendBuffer's return value,
-      // which can jump over the mdat atom and skip all the sample data.
-      offset = end;
+        const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        ab.fileStart = offset;
+        mp4boxFile.appendBuffer(ab);
+        // Always advance by what we actually read — do NOT use appendBuffer's return value,
+        // which can jump over the mdat atom and skip all the sample data.
+        offset = end;
 
-      // onSamples may have fired synchronously inside appendBuffer
-      if (!done) {
-        setImmediate(readNextChunk);
-      } else {
-        try { fs.closeSync(fd); } catch {}
+        // onSamples may have fired synchronously inside appendBuffer
+        if (!done) {
+          setImmediate(readNextChunk);
+        } else {
+          await fh.close().catch(() => {});
+        }
       }
-    }
 
-    readNextChunk();
+      readNextChunk().catch(reject);
+    }).catch(reject);
   });
 }
 
@@ -206,6 +219,7 @@ export async function extractVideoTelemetry(filePath) {
   const deviceId = Object.keys(telemetry)[0];
   if (!deviceId) return null;
 
+  const camera = deviceId || null;
   const streams = telemetry[deviceId]?.streams;
   if (!streams) return null;
 
@@ -249,6 +263,7 @@ export async function extractVideoTelemetry(filePath) {
   const filtered = filterGpsOutliers(coordinates);
 
   return {
+    camera,
     startPoint: { lat: filtered[0].lat, lon: filtered[0].lon },
     endPoint: { lat: filtered[filtered.length - 1].lat, lon: filtered[filtered.length - 1].lon },
     coordinates: filtered,
@@ -273,7 +288,12 @@ export async function extractPhotoGps(filePath) {
       return null;
     }
 
+    const make = exif.Make?.trim() || '';
+    const model = exif.Model?.trim() || '';
+    const camera = [make, model].filter(Boolean).join(' ') || null;
+
     return {
+      camera,
       startPoint: { lat: exif.latitude, lon: exif.longitude },
       altitude: exif.GPSAltitude || null,
       startDate: exif.DateTimeOriginal || exif.CreateDate || null,

@@ -363,6 +363,8 @@
 .media-table tbody tr:hover { background: #f0f4ff; }
 .media-table tbody tr.row--nogps { color: #9ca3af; }
 .media-table tbody tr.row--nogps:hover { background: #fafafa; }
+.media-table tbody tr.row--pass { color: #7c3aed; }
+.media-table tbody tr.row--pass:hover { background: #f5f3ff; }
 
 .media-table td {
   padding: 7px 12px;
@@ -453,6 +455,52 @@
 .month-pill:hover { background: #f3f4f6; }
 
 .month-pill--active {
+  color: #fff;
+}
+
+.type-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #6b7280;
+  background: #fff;
+  color: #6b7280;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.type-toggle:hover { background: #f3f4f6; }
+
+.type-toggle--active {
+  background: #374151;
+  border-color: #374151;
+  color: #fff;
+}
+
+.camera-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid #0891b2;
+  background: #fff;
+  color: #0891b2;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.camera-pill:hover { background: #ecfeff; }
+
+.camera-pill--active {
+  background: #0891b2;
   color: #fff;
 }
 

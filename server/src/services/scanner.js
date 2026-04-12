@@ -7,6 +7,7 @@ const PHOTO_EXTS = /\.(jpg|jpeg|png|heic)$/i;
 
 
 function scanRecursive(dir, results, isTopLevel = false) {
+  console.log(`  Scanning: ${dir}`);
   let entries;
   try {
     entries = fs.readdirSync(dir);
@@ -14,6 +15,7 @@ function scanRecursive(dir, results, isTopLevel = false) {
     console.error(`Cannot read directory: ${dir} — ${err.message}`);
     return;
   }
+  console.log(`  Found ${entries.length} entries in ${dir}`);
 
   for (const entry of entries) {
     // Skip hidden files and Synology system directories/files
@@ -40,6 +42,9 @@ function scanRecursive(dir, results, isTopLevel = false) {
     const isVideo = VIDEO_EXTS.test(entry);
     const isPhoto = PHOTO_EXTS.test(entry);
     if (!isVideo && !isPhoto) continue;
+
+    // Skip photos whose filename starts with an excluded prefix (e.g. Sony DSC_XXXX)
+    if (isPhoto && config.excludePhotoPrefixes.some(p => entry.toUpperCase().startsWith(p))) continue;
 
     // Build a unique ID from the relative path (handles same filename in different folders)
     const relPath = path.relative(config.videoDir, filepath);

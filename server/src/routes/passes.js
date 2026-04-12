@@ -48,6 +48,26 @@ router.get('/', (req, res) => {
   res.json(listGpxFiles());
 });
 
+// GET /api/passes/all — all waypoints from all GPX files
+router.get('/all', (req, res) => {
+  const files = listGpxFiles();
+  const result = [];
+  for (const file of files) {
+    const filename = decodeURIComponent(file.id);
+    const filepath = path.join(config.passesDir, filename);
+    try {
+      const content = fs.readFileSync(filepath, 'utf-8');
+      const waypoints = parseWaypoints(content);
+      for (const wpt of waypoints) {
+        result.push({ ...wpt, source: file.id, sourceName: file.name });
+      }
+    } catch {
+      // skip unreadable files
+    }
+  }
+  res.json(result);
+});
+
 // GET /api/passes/:id — waypoints from a specific GPX file
 router.get('/:id', (req, res) => {
   const filename = decodeURIComponent(req.params.id);

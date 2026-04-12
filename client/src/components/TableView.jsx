@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { fetchAllMedia, getThumbnailUrl } from '../services/api';
+import { fetchAllMedia, fetchAllPassWaypoints, getThumbnailUrl } from '../services/api';
 import { REGIONS, MONTH_NAMES, inRegion } from '../constants';
 
 const COLUMNS = [
@@ -10,7 +10,8 @@ const COLUMNS = [
   { key: 'startDate',   label: 'Date' },
   { key: 'year',        label: 'Year' },
   { key: 'zones',       label: 'Zone' },
-  { key: 'startPoint',  label: 'GPS Start' },
+  { key: 'startPoint',  label: 'GPS' },
+  { key: 'elevation',   label: 'Elevation' },
   { key: 'endPoint',    label: 'GPS End' },
   { key: 'duration',    label: 'Duration' },
   { key: 'totalPoints', label: 'Points' },
@@ -55,14 +56,15 @@ function getItemZones(item) {
 
 function cellValue(item, key) {
   switch (key) {
-    case 'fileSize':    return fmtSize(item.fileSize);
-    case 'startDate':   return fmtDate(item.startDate || item.lastModified);
+    case 'fileSize':    return item.type === 'pass' ? null : fmtSize(item.fileSize);
+    case 'startDate':   return item.type === 'pass' ? null : fmtDate(item.startDate || item.lastModified);
     case 'startPoint':  return fmtCoord(item.startPoint);
+    case 'elevation':   return item.elevation != null ? `${item.elevation} m` : null;
     case 'endPoint':    return item.type === 'video' ? fmtCoord(item.endPoint) : null;
     case 'duration':    return item.type === 'video' ? fmtDuration(item.duration) : null;
     case 'totalPoints': return item.type === 'video' ? (item.totalPoints ?? '—') : null;
     case 'year':        return item.startDate ? String(new Date(item.startDate).getFullYear()) : null;
-    case 'zones':       return getItemZones(item).map(r => r.name).join(', ') || null;
+    case 'zones':       return item.type === 'pass' ? null : (getItemZones(item).map(r => r.name).join(', ') || null);
     default:            return item[key] || '—';
   }
 }
@@ -72,6 +74,7 @@ function sortValue(item, key) {
     case 'fileSize':    return item.fileSize ?? 0;
     case 'startDate':   return new Date(item.startDate || item.lastModified || 0).getTime();
     case 'startPoint':  return item.startPoint?.lat ?? -Infinity;
+    case 'elevation':   return item.elevation ?? -Infinity;
     case 'endPoint':    return item.endPoint?.lat ?? -Infinity;
     case 'duration':    return item.duration ?? -1;
     case 'totalPoints': return item.totalPoints ?? -1;
@@ -91,11 +94,24 @@ export default function TableView({
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState('startDate');
   const [sortAsc, setSortAsc] = useState(false);
-  const [typeFilter, setTypeFilter] = useState('all'); // all | video | photo | nogps
+  const [typeFilter, setTypeFilter] = useState('all'); // all | video | photo | pass | nogps
 
   useEffect(() => {
-    fetchAllMedia()
-      .then(data => { setItems(data); setLoading(false); })
+    Promise.all([fetchAllMedia(), fetchAllPassWaypoints()])
+      .then(([media, waypoints]) => {
+        const passes = waypoints.map(w => ({
+          id: `pass__${w.source}__${w.name}`,
+          filename: w.name,
+          subfolder: w.sourceName,
+          type: 'pass',
+          startPoint: { lat: w.lat, lon: w.lon },
+          elevation: w.ele,
+          noGps: false,
+          hasThumbnail: false,
+        }));
+        setItems([...media, ...passes]);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -136,7 +152,9 @@ export default function TableView({
     return items.filter(item => {
       if (typeFilter === 'video' && item.type !== 'video') return false;
       if (typeFilter === 'photo' && item.type !== 'photo') return false;
+      if (typeFilter === 'pass' && item.type !== 'pass') return false;
       if (typeFilter === 'nogps' && !item.noGps) return false;
+      if (item.type === 'pass' && typeFilter !== 'pass' && typeFilter !== 'all') return false;
       if (activeRegion && !inRegion(item, activeRegion)) return false;
       if (filterYear) {
         if (!item.startDate) return false;
@@ -163,24 +181,33 @@ export default function TableView({
   });
 
   const counts = {
-    all: items.length,
+    all: items.filter(i => !i.noGps || i.type === 'pass').length,
     video: items.filter(i => i.type === 'video').length,
     photo: items.filter(i => i.type === 'photo').length,
+    pass: items.filter(i => i.type === 'pass').length,
     nogps: items.filter(i => i.noGps).length,
   };
+
+  const TYPE_FILTERS = [
+    { key: 'all',   label: 'All' },
+    { key: 'video', label: 'Videos' },
+    { key: 'photo', label: 'Photos' },
+    { key: 'pass',  label: 'Passes' },
+    { key: 'nogps', label: 'No GPS' },
+  ];
 
   return (
     <div className="table-view">
       <div className="table-toolbar">
         <div className="table-filters">
-          {['all', 'video', 'photo', 'nogps'].map(f => (
+          {TYPE_FILTERS.map(f => (
             <button
-              key={f}
-              className={`filter-btn${typeFilter === f ? ' filter-btn--active' : ''}`}
-              onClick={() => setTypeFilter(f)}
+              key={f.key}
+              className={`filter-btn${typeFilter === f.key ? ' filter-btn--active' : ''}`}
+              onClick={() => setTypeFilter(f.key)}
             >
-              {f === 'nogps' ? 'No GPS' : f.charAt(0).toUpperCase() + f.slice(1)}
-              <span className="filter-count">{counts[f]}</span>
+              {f.label}
+              <span className="filter-count">{counts[f.key]}</span>
             </button>
           ))}
         </div>
@@ -302,9 +329,9 @@ export default function TableView({
               {sorted.map(item => (
                 <tr
                   key={item.id}
-                  className={item.noGps ? 'row--nogps' : ''}
-                  onClick={() => !item.noGps && onSelectItem && onSelectItem(item)}
-                  style={{ cursor: item.noGps ? 'default' : 'pointer' }}
+                  className={item.type === 'pass' ? 'row--pass' : item.noGps ? 'row--nogps' : ''}
+                  onClick={() => !item.noGps && item.type !== 'pass' && onSelectItem && onSelectItem(item)}
+                  style={{ cursor: (item.noGps || item.type === 'pass') ? 'default' : 'pointer' }}
                 >
                   <td className="col-thumb">
                     {item.hasThumbnail && (
