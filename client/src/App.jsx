@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import MapView from './components/MapView';
 import VideoPanel from './components/VideoPanel';
 import TableView from './components/TableView';
@@ -9,9 +9,10 @@ import './App.css';
 import { YEAR_PALETTE, MONTH_NAMES, REGIONS, inRegion } from './constants';
 
 function App() {
-  const { videos, loading, error } = useVideos();
+  const { videos, loading, error, refresh: refreshVideos } = useVideos();
   const [selectedVideo, setSelectedVideo] = useState(null);
-  const { track, loading: trackLoading } = useTelemetry(selectedVideo?.id);
+  const [telemetryRefreshKey, setTelemetryRefreshKey] = useState(0);
+  const { track, loading: trackLoading } = useTelemetry(selectedVideo?.id, telemetryRefreshKey);
   const [allTracks, setAllTracks] = useState([]);
   const [allPassIndex, setAllPassIndex] = useState([]); // [{name,lat,lon,ele,source,sourceName}]
   const [activePassFiles, setActivePassFiles] = useState(new Set());
@@ -166,6 +167,14 @@ function App() {
   const handleClose = () => {
     setSelectedVideo(null);
   };
+
+  const handleRecheckDone = useCallback((updatedEntry) => {
+    if (updatedEntry) {
+      setSelectedVideo(prev => prev ? { ...prev, ...updatedEntry } : prev);
+    }
+    setTelemetryRefreshKey(k => k + 1);
+    refreshVideos();
+  }, [refreshVideos]);
 
   return (
     <div className="app">
@@ -346,6 +355,7 @@ function App() {
           track={track}
           trackLoading={trackLoading}
           onClose={handleClose}
+          onRecheckDone={handleRecheckDone}
         />
       )}
 

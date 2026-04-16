@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchTelemetry } from '../services/api';
 
-export function useTelemetry(videoId) {
+export function useTelemetry(videoId, refreshKey = 0) {
   const [track, setTrack] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +29,7 @@ export function useTelemetry(videoId) {
       });
 
     return () => { cancelled = true; };
-  }, [videoId]);
+  }, [videoId, refreshKey]);
 
   return { track, loading };
 }
