@@ -397,6 +397,51 @@ export function getVideoTelemetry(id) {
   };
 }
 
+/**
+ * Force re-extraction of GPS for a single media item, bypassing the cache.
+ * Useful when the cached GPS coordinates are wrong and need to be reprocessed
+ * with the latest filtering logic.
+ */
+export async function recheckMediaItem(id) {
+  const entry = allMediaIndex.get(id);
+  if (!entry) return null;
+
+  if (!fs.existsSync(entry.filepath)) {
+    return { error: `File not found: ${entry.filepath}` };
+  }
+
+  // Rebuild a file descriptor with current disk metadata
+  const stat = fs.statSync(entry.filepath);
+  const file = {
+    id: entry.id,
+    filename: entry.filename,
+    filepath: entry.filepath,
+    relativePath: entry.relativePath,
+    subfolder: entry.subfolder,
+    fileSize: stat.size,
+    lastModified: stat.mtime.toISOString(),
+    type: entry.type,
+  };
+
+  // Remove stale entries before re-processing
+  allMediaIndex.delete(id);
+  mediaIndex.delete(id);
+  deleteCache(id);
+
+  try {
+    const result = file.type === 'video'
+      ? await processVideo(file, '[recheck]')
+      : await processPhoto(file, '[recheck]');
+    const updated = allMediaIndex.get(id);
+    return { result, entry: updated };
+  } catch (err) {
+    const errEntry = { ...file, noGps: true, error: err.message };
+    writeCache(id, errEntry);
+    allMediaIndex.set(id, errEntry);
+    return { error: err.message };
+  }
+}
+
 export function getMediaFilePath(id) {
   const entry = mediaIndex.get(id);
   return entry?.filepath || null;
