@@ -100,14 +100,15 @@ function downsample(coordinates) {
     .map(c => ({ lat: c.lat, lon: c.lon }));
 }
 
+let batchMode = false; // when true, index saves are deferred
+
 function writeCache(id, data) {
   const cachePath = getCachePath(id);
   const dir = path.dirname(cachePath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(cachePath, JSON.stringify(data, null, 2));
-  // Store with downsampled track only — full coordinates loaded on demand from individual file
   diskCache.set(id, { ...data, coordinates: undefined, coordinatesSampled: downsample(data.coordinates) });
-  saveCacheIndex();
+  if (!batchMode) saveCacheIndex();
 }
 
 const FINGERPRINT_INDEX_PATH = path.join(config.cacheDir, 'fingerprint-index.json');
@@ -155,11 +156,10 @@ function deleteCache(id) {
   const cachePath = getCachePath(id);
   try { if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath); } catch { }
   diskCache.delete(id);
-  saveCacheIndex();
   for (const [key, val] of fingerprintIndex) {
     if (val.id === id) { fingerprintIndex.delete(key); break; }
   }
-  saveFingerprintIndex();
+  if (!batchMode) { saveCacheIndex(); saveFingerprintIndex(); }
 }
 
 function findCacheByFingerprint(file) {
@@ -345,41 +345,51 @@ export async function loadCache() {
   let cached = 0, relocated = 0;
   const toProcess = [];
 
-  for (const file of mediaFiles) {
-    let cacheEntry = readCache(file.id);
-    const mtimeMatch = cacheEntry && Math.abs(
-      new Date(cacheEntry.lastModified).getTime() - new Date(file.lastModified).getTime()
-    ) < 1000;
+  batchMode = true; // defer index saves until all relocations are done
+  try {
+    for (const file of mediaFiles) {
+      let cacheEntry = readCache(file.id);
+      const mtimeMatch = cacheEntry && Math.abs(
+        new Date(cacheEntry.lastModified).getTime() - new Date(file.lastModified).getTime()
+      ) < 1000;
 
-    if (cacheEntry && cacheEntry.fileSize === file.fileSize && mtimeMatch) {
-      cacheEntry.filepath = file.filepath;
-      allMediaIndex.set(file.id, cacheEntry);
-      if (!cacheEntry.noGps) mediaIndex.set(file.id, cacheEntry);
-      cached++;
-      continue;
+      if (cacheEntry && cacheEntry.fileSize === file.fileSize && mtimeMatch) {
+        cacheEntry.filepath = file.filepath;
+        allMediaIndex.set(file.id, cacheEntry);
+        if (!cacheEntry.noGps) mediaIndex.set(file.id, cacheEntry);
+        cached++;
+        continue;
+      }
+
+      const found = findCacheByFingerprint(file);
+      if (found && found.entry.type === file.type) {
+        const { entry: oldEntry, oldId } = found;
+        console.log(`  Relocated: ${oldEntry.relativePath} → ${file.relativePath}`);
+        const updatedEntry = {
+          ...oldEntry,
+          id: file.id,
+          filepath: file.filepath,
+          relativePath: file.relativePath,
+          subfolder: file.subfolder,
+        };
+        writeCache(file.id, updatedEntry);
+        if (oldId !== file.id) deleteCache(oldId);
+        allMediaIndex.set(file.id, updatedEntry);
+        if (!updatedEntry.noGps) mediaIndex.set(file.id, updatedEntry);
+        cached++;
+        relocated++;
+        continue;
+      }
+
+      toProcess.push(file);
     }
-
-    const found = findCacheByFingerprint(file);
-    if (found) {
-      const { entry: oldEntry, oldId } = found;
-      console.log(`  Relocated: ${oldEntry.relativePath} → ${file.relativePath}`);
-      const updatedEntry = {
-        ...oldEntry,
-        id: file.id,
-        filepath: file.filepath,
-        relativePath: file.relativePath,
-        subfolder: file.subfolder,
-      };
-      writeCache(file.id, updatedEntry);
-      if (oldId !== file.id) deleteCache(oldId);
-      allMediaIndex.set(file.id, updatedEntry);
-      if (!updatedEntry.noGps) mediaIndex.set(file.id, updatedEntry);
-      cached++;
-      relocated++;
-      continue;
+  } finally {
+    batchMode = false;
+    if (relocated > 0) {
+      console.log(`${ts()} Saving indexes after ${relocated} relocations…`);
+      saveCacheIndex();
+      saveFingerprintIndex();
     }
-
-    toProcess.push(file);
   }
 
   const videos = toProcess.filter(f => f.type === 'video').length;
