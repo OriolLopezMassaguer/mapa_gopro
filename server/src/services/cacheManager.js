@@ -1,18 +1,86 @@
 import fs from 'fs';
 import path from 'path';
+import { Worker } from 'worker_threads';
+import { fileURLToPath } from 'url';
 import config from '../config.js';
 import { scanMediaDirectory } from './scanner.js';
-import { extractVideoTelemetry, extractPhotoGps } from './telemetryExtractor.js';
 import { generateThumbnail } from './thumbnailGenerator.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const WORKER_PATH = path.join(__dirname, 'extractionWorker.js');
 
 const mediaIndex = new Map();
 const allMediaIndex = new Map();
+const thumbnailSet = new Set(); // IDs that have a thumbnail on disk
+
+// Invalidation flags — set to true when indexes change, cleared after rebuild
+let mediaItemsDirty = true;
+let allMediaItemsDirty = true;
+let allTracksDirty = true;
+let cachedMediaItems = [];
+let cachedAllMediaItems = [];
+let cachedAllTracks = [];
+
+function invalidate() {
+  mediaItemsDirty = true;
+  allMediaItemsDirty = true;
+  allTracksDirty = true;
+}
 
 function ensureDirs() {
   for (const dir of [config.cacheDir, config.metadataDir, config.thumbnailDir]) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
+  }
+  // Pre-load thumbnail IDs into memory so endpoint handlers never hit the filesystem
+  try {
+    for (const f of fs.readdirSync(config.thumbnailDir)) {
+      if (f.endsWith('.jpg')) thumbnailSet.add(f.slice(0, -4));
+    }
+    console.log(`Thumbnail index: ${thumbnailSet.size} entries`);
+  } catch { }
+}
+
+// Consolidated index: one file with all metadata (no coordinates).
+// Coordinates are large and only needed on-demand — kept in individual files.
+const CACHE_INDEX_PATH = path.join(config.cacheDir, 'cache-index.json');
+
+// In-memory map: id -> entry (without coordinates, loaded from cache-index.json)
+const diskCache = new Map();
+
+function saveCacheIndex() {
+  const obj = Object.fromEntries(diskCache);
+  fs.writeFileSync(CACHE_INDEX_PATH, JSON.stringify(obj));
+}
+
+async function loadAllCacheEntries() {
+  const t0 = Date.now();
+  try {
+    const raw = await fs.promises.readFile(CACHE_INDEX_PATH, 'utf-8');
+    const obj = JSON.parse(raw);
+    for (const [id, entry] of Object.entries(obj)) diskCache.set(id, entry);
+    console.log(`  [2] Done — ${diskCache.size} entries loaded in ${((Date.now() - t0) / 1000).toFixed(1)}s (from cache-index.json)`);
+  } catch {
+    // First run or corrupt index — rebuild from individual files
+    console.log('  [2] cache-index.json not found, rebuilding from individual files (one-time)…');
+    let names;
+    try { names = await fs.promises.readdir(config.metadataDir, { recursive: true }); } catch { return; }
+    const jsonFiles = names.filter(n => typeof n === 'string' && n.endsWith('.json'));
+    console.log(`  [2] ${jsonFiles.length} files to read…`);
+    let done = 0;
+    await runPool(jsonFiles, async (name) => {
+      try {
+        const raw = await fs.promises.readFile(path.join(config.metadataDir, name), 'utf-8');
+        const entry = JSON.parse(raw);
+        if (entry?.id) diskCache.set(entry.id, { ...entry, coordinates: undefined, coordinatesSampled: downsample(entry.coordinates) });
+      } catch { }
+      done++;
+      if (done % 200 === 0 || done === jsonFiles.length)
+        console.log(`  [2] … ${done}/${jsonFiles.length} in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+    }, 32);
+    saveCacheIndex();
+    console.log(`  [2] Done — ${diskCache.size} entries, index saved. Next startup will be fast.`);
   }
 }
 
@@ -21,85 +89,113 @@ function getCachePath(id) {
 }
 
 function readCache(id) {
-  const cachePath = getCachePath(id);
-  if (!fs.existsSync(cachePath)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
-  } catch {
-    return null;
-  }
+  return diskCache.get(id) ?? null;
+}
+
+function downsample(coordinates) {
+  if (!coordinates?.length) return undefined;
+  const step = Math.max(1, Math.floor(coordinates.length / 200));
+  return coordinates
+    .filter((_, i) => i % step === 0 || i === coordinates.length - 1)
+    .map(c => ({ lat: c.lat, lon: c.lon }));
 }
 
 function writeCache(id, data) {
-  // Ensure subdirectory exists for nested IDs
   const cachePath = getCachePath(id);
   const dir = path.dirname(cachePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(cachePath, JSON.stringify(data, null, 2));
+  // Store with downsampled track only — full coordinates loaded on demand from individual file
+  diskCache.set(id, { ...data, coordinates: undefined, coordinatesSampled: downsample(data.coordinates) });
+  saveCacheIndex();
+}
+
+const FINGERPRINT_INDEX_PATH = path.join(config.cacheDir, 'fingerprint-index.json');
+
+// In-memory fingerprint index: "filename|size|mtime" -> { id, filename, fileSize, lastModified }
+let fingerprintIndex = new Map();
+
+function fingerprintKey(entry) {
+  return `${entry.filename}|${entry.fileSize}|${new Date(entry.lastModified).getTime()}`;
+}
+
+function saveFingerprintIndex() {
+  const obj = Object.fromEntries(fingerprintIndex);
+  fs.writeFileSync(FINGERPRINT_INDEX_PATH, JSON.stringify(obj));
+}
+
+function loadFingerprintIndex() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(FINGERPRINT_INDEX_PATH, 'utf-8'));
+    fingerprintIndex = new Map(Object.entries(raw));
+    console.log(`Fingerprint index loaded: ${fingerprintIndex.size} entries (from index file)`);
+  } catch {
+    // Index missing or corrupt — rebuild from individual cache files (one-time cost)
+    console.log('Fingerprint index not found — rebuilding from individual cache files (one-time cost)…');
+    fingerprintIndex = new Map();
+    let dir;
+    try { dir = fs.readdirSync(config.metadataDir, { recursive: true }); } catch { return; }
+    const jsonFiles = dir.filter(n => n.endsWith('.json'));
+    console.log(`  Reading ${jsonFiles.length} cache files…`);
+    let done = 0;
+    for (const name of jsonFiles) {
+      try {
+        const entry = JSON.parse(fs.readFileSync(path.join(config.metadataDir, name), 'utf-8'));
+        fingerprintIndex.set(fingerprintKey(entry), { id: entry.id, filename: entry.filename, fileSize: entry.fileSize, lastModified: entry.lastModified });
+      } catch { continue; }
+      done++;
+      if (done % 200 === 0) console.log(`  … ${done}/${jsonFiles.length}`);
+    }
+    saveFingerprintIndex();
+    console.log(`Fingerprint index rebuilt: ${fingerprintIndex.size} entries — saved to disk, next startup will be fast.`);
+  }
 }
 
 function deleteCache(id) {
   const cachePath = getCachePath(id);
-  try {
-    if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
-  } catch {
-    // ignore
+  try { if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath); } catch { }
+  diskCache.delete(id);
+  saveCacheIndex();
+  for (const [key, val] of fingerprintIndex) {
+    if (val.id === id) { fingerprintIndex.delete(key); break; }
   }
+  saveFingerprintIndex();
 }
 
-// Build a fingerprint to identify a file regardless of its path.
-// Uses filename + fileSize + mtime (within 1s tolerance).
-function fingerprintMatches(entry, file) {
-  if (entry.filename !== file.filename) return false;
-  if (entry.fileSize !== file.fileSize) return false;
-  return Math.abs(new Date(entry.lastModified).getTime() - new Date(file.lastModified).getTime()) < 1000;
+function findCacheByFingerprint(file) {
+  const key = fingerprintKey(file);
+  const match = fingerprintIndex.get(key);
+  if (!match) return null;
+  // Load the full entry from disk
+  const entry = readCache(match.id);
+  return entry ? { entry, oldId: match.id } : null;
 }
 
-// Load all existing cache entries into memory once, keyed by fingerprint "filename|size|mtime".
-// Used to detect relocated files without re-scanning disk on every miss.
-function loadFingerprintIndex() {
-  const index = new Map(); // fingerprint -> { entry, oldId }
-  let dir;
-  try {
-    dir = fs.readdirSync(config.metadataDir, { recursive: true });
-  } catch {
-    return index;
-  }
-  for (const name of dir) {
-    if (!name.endsWith('.json')) continue;
-    const fullPath = path.join(config.metadataDir, name);
-    let entry;
-    try {
-      entry = JSON.parse(fs.readFileSync(fullPath, 'utf-8'));
-    } catch {
-      continue;
-    }
-    const key = `${entry.filename}|${entry.fileSize}|${new Date(entry.lastModified).getTime()}`;
-    index.set(key, { entry, oldId: entry.id });
-  }
-  return index;
-}
-
-function findCacheByFingerprint(file, fingerprintIndex) {
-  for (const [, value] of fingerprintIndex) {
-    if (fingerprintMatches(value.entry, file)) return value;
-  }
-  return null;
-}
-
-function withTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(`Timed out after ${ms / 1000}s`)), ms)),
-  ]);
+function runInWorker(file, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(WORKER_PATH, { workerData: { file } });
+    const timer = setTimeout(() => {
+      worker.terminate();
+      reject(new Error(`Timed out after ${timeoutMs / 1000}s`));
+    }, timeoutMs);
+    worker.on('message', (msg) => {
+      clearTimeout(timer);
+      worker.terminate();
+      if (msg.ok) resolve(msg.result);
+      else reject(new Error(msg.error));
+    });
+    worker.on('error', (err) => { clearTimeout(timer); reject(err); });
+    worker.on('exit', (code) => {
+      clearTimeout(timer);
+      if (code !== 0) reject(new Error(`Worker exited with code ${code}`));
+    });
+  });
 }
 
 async function processVideo(file, prefix) {
   const sizeGb = (file.fileSize / 1e9).toFixed(2);
-  // Scale timeout with file size: 120s base + 30s per GB
-  const timeoutMs = Math.max(120_000, 120_000 + Math.ceil(file.fileSize / 1e9) * 30_000);
+  // Fixed 10-minute timeout per file (network share needs generous headroom)
+  const timeoutMs = 600_000;
   console.log(`${prefix} Extracting GPS from video: ${file.relativePath} (${sizeGb} GB, timeout: ${timeoutMs / 1000}s)`);
 
   const startMs = Date.now();
@@ -109,7 +205,7 @@ async function processVideo(file, prefix) {
 
   let telemetry;
   try {
-    telemetry = await withTimeout(extractVideoTelemetry(file.filepath), timeoutMs);
+    telemetry = await runInWorker(file, timeoutMs);
   } finally {
     clearInterval(heartbeat);
   }
@@ -133,10 +229,12 @@ async function processVideo(file, prefix) {
 
     try {
       await generateThumbnail(file.filepath, file.id);
+      thumbnailSet.add(file.id);
     } catch (err) {
       console.log(`  Thumbnail failed: ${err.message}`);
     }
 
+    invalidate();
     console.log(`  -> ${telemetry.totalPoints} GPS points`);
     return 'extracted';
   } else {
@@ -161,7 +259,7 @@ async function processVideo(file, prefix) {
 async function processPhoto(file, prefix) {
   console.log(`${prefix} Reading EXIF from photo: ${file.relativePath}`);
 
-  const gps = await extractPhotoGps(file.filepath);
+  const gps = await runInWorker(file, 30_000);
 
   if (gps) {
     const entry = {
@@ -178,6 +276,7 @@ async function processPhoto(file, prefix) {
     writeCache(file.id, entry);
     mediaIndex.set(file.id, entry);
     allMediaIndex.set(file.id, entry);
+    invalidate();
     console.log(`  -> GPS: ${gps.startPoint.lat.toFixed(5)}, ${gps.startPoint.lon.toFixed(5)}`);
     return 'extracted';
   } else {
@@ -194,7 +293,7 @@ async function processPhoto(file, prefix) {
     };
     writeCache(file.id, entry);
     allMediaIndex.set(file.id, entry);
-    console.log(`  -> No GPS data`);
+    invalidate();
     return 'noGps';
   }
 }
@@ -215,28 +314,37 @@ async function runPool(items, fn, concurrency) {
 // Videos each spawn an ffmpeg process, so keep this modest.
 const CACHE_CONCURRENCY = parseInt(process.env.CACHE_CONCURRENCY, 10) || 4;
 
-export async function initializeCache() {
+// Phase 1: load existing cache entries into memory — fast, runs before server is ready.
+export async function loadCache() {
   ensureDirs();
-  console.log(`Cache concurrency: ${CACHE_CONCURRENCY}`);
-  const mediaFiles = scanMediaDirectory();
+  const t0 = Date.now();
+  const ts = () => `[+${((Date.now() - t0) / 1000).toFixed(1)}s]`;
+
+  console.log(`${ts()} Loading fingerprint index…`);
+  loadFingerprintIndex();
+
+  console.log(`${ts()} Starting in parallel:`);
+  console.log(`  [1] Scanning: ${config.mediaDir}`);
+  console.log(`  [2] Loading cache: ${config.metadataDir}`);
+
+  const [mediaFiles] = await Promise.all([
+    scanMediaDirectory().then(files => {
+      console.log(`${ts()} [1] Scan done — ${files.filter(f => f.type === 'video').length} videos, ${files.filter(f => f.type === 'photo').length} photos`);
+      return files;
+    }),
+    loadAllCacheEntries(),
+  ]);
+  console.log(`${ts()} Both complete — ${mediaFiles.length} media files on disk, ${diskCache.size} cache entries in memory`);
 
   if (mediaFiles.length === 0) {
-    console.log('No media files found. The server will start with no data.');
-    return;
+    console.log('No media files found.');
+    return [];
   }
 
-  let cached = 0;
-  let extracted = 0;
-  let noGps = 0;
-  let errors = 0;
-
-  // Load all existing cache entries once for relocation detection (avoids O(n²) disk reads).
-  console.log('Loading cache fingerprint index…');
-  const fingerprintIndex = loadFingerprintIndex();
-  console.log(`Fingerprint index loaded: ${fingerprintIndex.size} entries`);
-
-  // Resolve cache hits synchronously first (fast — just JSON reads).
+  console.log(`${ts()} Matching files against cache…`);
+  let cached = 0, relocated = 0;
   const toProcess = [];
+
   for (const file of mediaFiles) {
     let cacheEntry = readCache(file.id);
     const mtimeMatch = cacheEntry && Math.abs(
@@ -244,7 +352,6 @@ export async function initializeCache() {
     ) < 1000;
 
     if (cacheEntry && cacheEntry.fileSize === file.fileSize && mtimeMatch) {
-      // Same path hit — update filepath in case VIDEO_DIR root changed
       cacheEntry.filepath = file.filepath;
       allMediaIndex.set(file.id, cacheEntry);
       if (!cacheEntry.noGps) mediaIndex.set(file.id, cacheEntry);
@@ -252,11 +359,10 @@ export async function initializeCache() {
       continue;
     }
 
-    // Path-based miss — search fingerprint index to detect relocation
-    const relocated = findCacheByFingerprint(file, fingerprintIndex);
-    if (relocated) {
-      const { entry: oldEntry, oldId } = relocated;
-      console.log(`Relocated: ${oldEntry.relativePath} -> ${file.relativePath}`);
+    const found = findCacheByFingerprint(file);
+    if (found) {
+      const { entry: oldEntry, oldId } = found;
+      console.log(`  Relocated: ${oldEntry.relativePath} → ${file.relativePath}`);
       const updatedEntry = {
         ...oldEntry,
         id: file.id,
@@ -269,58 +375,60 @@ export async function initializeCache() {
       allMediaIndex.set(file.id, updatedEntry);
       if (!updatedEntry.noGps) mediaIndex.set(file.id, updatedEntry);
       cached++;
+      relocated++;
       continue;
     }
 
     toProcess.push(file);
   }
 
-  if (toProcess.length > 0) {
-    console.log(`Processing ${toProcess.length} new files (concurrency: ${CACHE_CONCURRENCY})…`);
+  const videos = toProcess.filter(f => f.type === 'video').length;
+  const photos = toProcess.filter(f => f.type === 'photo').length;
+  console.log(`${ts()} Cache load complete:`);
+  console.log(`  ${cached} cached (${relocated} relocated), ${toProcess.length} new (${videos} videos, ${photos} photos)`);
+  console.log(`  ${mediaIndex.size} items with GPS ready to serve`);
+  console.log(`  ${thumbnailSet.size} thumbnails indexed`);
+  return toProcess;
+}
 
-    let done = 0;
-    await runPool(toProcess, async (file) => {
-      const idx = ++done;
-      const prefix = `[${idx}/${toProcess.length}]`;
-      try {
-        let result;
-        if (file.type === 'video') {
-          result = await processVideo(file, prefix);
-        } else {
-          result = await processPhoto(file, prefix);
-        }
-        if (result === 'extracted') extracted++;
-        else noGps++;
-      } catch (err) {
-        console.error(`${prefix} Error processing ${file.relativePath}: ${err.message}`);
-        // Cache the error so we don't retry on next restart
-        const entry = {
-          id: file.id,
-          filename: file.filename,
-          filepath: file.filepath,
-          relativePath: file.relativePath,
-          subfolder: file.subfolder,
-          fileSize: file.fileSize,
-          lastModified: file.lastModified,
-          type: file.type,
-          noGps: true,
-          error: err.message,
-        };
-        writeCache(file.id, entry);
-        allMediaIndex.set(file.id, entry);
-        errors++;
-      }
-    }, CACHE_CONCURRENCY);
-  }
+// Phase 2: extract GPS from new files — slow, runs in background after server is ready.
+export async function processNewFiles(toProcess) {
+  if (toProcess.length === 0) return;
 
-  console.log(`\nCache initialization complete:`);
-  console.log(`  Total: ${mediaFiles.length} files`);
-  console.log(`  ${cached} cached, ${extracted} extracted, ${noGps} no GPS, ${errors} errors`);
-  console.log(`  ${mediaIndex.size} items with GPS on map`);
+  console.log(`\nBackground cache update: processing ${toProcess.length} new files (concurrency: ${CACHE_CONCURRENCY})…`);
+  let extracted = 0, noGps = 0, errors = 0, done = 0;
+
+  await runPool(toProcess, async (file) => {
+    const idx = ++done;
+    const prefix = `[${idx}/${toProcess.length}]`;
+    try {
+      const result = file.type === 'video'
+        ? await processVideo(file, prefix)
+        : await processPhoto(file, prefix);
+      if (result === 'extracted') extracted++;
+      else noGps++;
+    } catch (err) {
+      console.error(`${prefix} Error processing ${file.relativePath}: ${err.message}`);
+      const entry = {
+        id: file.id, filename: file.filename, filepath: file.filepath,
+        relativePath: file.relativePath, subfolder: file.subfolder,
+        fileSize: file.fileSize, lastModified: file.lastModified,
+        type: file.type, noGps: true, error: err.message,
+      };
+      writeCache(file.id, entry);
+      allMediaIndex.set(file.id, entry);
+      errors++;
+    }
+  }, CACHE_CONCURRENCY);
+
+  console.log(`\nBackground cache update complete:`);
+  console.log(`  ${extracted} extracted, ${noGps} no GPS, ${errors} errors`);
+  console.log(`  ${mediaIndex.size} total items with GPS on map`);
 }
 
 export function getMediaItems() {
-  return Array.from(mediaIndex.values())
+  if (!mediaItemsDirty) return cachedMediaItems;
+  cachedMediaItems = Array.from(mediaIndex.values())
     .filter(v => !v.noGps && v.startPoint)
     .map(v => ({
       id: v.id,
@@ -334,10 +442,10 @@ export function getMediaItems() {
       totalPoints: v.totalPoints || null,
       startDate: v.startDate || null,
       altitude: v.altitude || null,
-      hasThumbnail: v.type === 'video'
-        ? fs.existsSync(path.join(config.thumbnailDir, `${v.id}.jpg`))
-        : true, // Photos are their own thumbnails
+      hasThumbnail: v.type === 'video' ? thumbnailSet.has(v.id) : true,
     }));
+  mediaItemsDirty = false;
+  return cachedMediaItems;
 }
 
 export function getMediaItemsForExport() {
@@ -348,7 +456,8 @@ export function getMediaItemsForExport() {
 }
 
 export function getAllMediaItems() {
-  return Array.from(allMediaIndex.values())
+  if (!allMediaItemsDirty) return cachedAllMediaItems;
+  cachedAllMediaItems = Array.from(allMediaIndex.values())
     .map(v => ({
       id: v.id,
       filename: v.filename,
@@ -366,31 +475,34 @@ export function getAllMediaItems() {
       duration: v.duration || null,
       totalPoints: v.totalPoints || null,
       altitude: v.altitude || null,
-      hasThumbnail: v.type === 'video'
-        ? fs.existsSync(path.join(config.thumbnailDir, `${v.id}.jpg`))
-        : !v.noGps,
+      hasThumbnail: v.type === 'video' ? thumbnailSet.has(v.id) : !v.noGps,
     }))
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+  allMediaItemsDirty = false;
+  return cachedAllMediaItems;
 }
 
 export function getAllVideoTracks() {
-  return Array.from(mediaIndex.values())
-    .filter(v => !v.noGps && v.type === 'video' && v.coordinates?.length > 0)
-    .map(v => {
-      // Downsample to max 200 points for overview display
-      const coords = v.coordinates;
-      const step = Math.max(1, Math.floor(coords.length / 200));
-      const sampled = coords.filter((_, i) => i % step === 0 || i === coords.length - 1);
-      return { id: v.id, coordinates: sampled.map(c => ({ lat: c.lat, lon: c.lon })) };
-    });
+  if (!allTracksDirty) return cachedAllTracks;
+  cachedAllTracks = Array.from(mediaIndex.values())
+    .filter(v => !v.noGps && v.type === 'video' && v.coordinatesSampled?.length > 0)
+    .map(v => ({ id: v.id, coordinates: v.coordinatesSampled }));
+  allTracksDirty = false;
+  return cachedAllTracks;
 }
 
 export function getVideoTelemetry(id) {
   const entry = mediaIndex.get(id);
   if (!entry || entry.noGps || entry.type !== 'video') return null;
+  // Load full coordinates from individual cache file on demand
+  let coordinates = null;
+  try {
+    const full = JSON.parse(fs.readFileSync(getCachePath(id), 'utf-8'));
+    coordinates = full.coordinates ?? null;
+  } catch { }
   return {
     id: entry.id,
-    coordinates: entry.coordinates,
+    coordinates,
     duration: entry.duration,
     totalPoints: entry.totalPoints,
     startDate: entry.startDate,
@@ -442,6 +554,27 @@ export async function recheckMediaItem(id) {
   }
 }
 
+export async function auditCache() {
+  const mediaFiles = await scanMediaDirectory();
+  const missing = [];
+  const cached = [];
+
+  for (const file of mediaFiles) {
+    if (allMediaIndex.has(file.id)) {
+      cached.push(file.id);
+    } else {
+      missing.push({ id: file.id, relativePath: file.relativePath, type: file.type });
+    }
+  }
+
+  return {
+    totalOnDisk: mediaFiles.length,
+    totalCached: cached.length,
+    totalMissing: missing.length,
+    missing,
+  };
+}
+
 export function getMediaFilePath(id) {
   const entry = mediaIndex.get(id);
   return entry?.filepath || null;
@@ -461,6 +594,5 @@ export function getThumbnailPath(id) {
     return entry.filepath;
   }
 
-  const thumbPath = path.join(config.thumbnailDir, `${id}.jpg`);
-  return fs.existsSync(thumbPath) ? thumbPath : null;
+  return thumbnailSet.has(id) ? path.join(config.thumbnailDir, `${id}.jpg`) : null;
 }

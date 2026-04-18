@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import MapView from './components/MapView';
 import VideoPanel from './components/VideoPanel';
 import TableView from './components/TableView';
+import AuditView from './components/AuditView';
 import { useVideos } from './hooks/useVideos';
 import { useTelemetry } from './hooks/useTelemetry';
 import { fetchAllTracks, fetchAllPassWaypoints } from './services/api';
@@ -191,6 +192,12 @@ function App() {
         >
           Table
         </button>
+        <button
+          className={`view-btn${view === 'audit' ? ' view-btn--active' : ''}`}
+          onClick={() => setView('audit')}
+        >
+          Audit
+        </button>
       </div>
 
       {view === 'map' && (
@@ -348,6 +355,8 @@ function App() {
           yearColorMap={yearColorMap}
         />
       )}
+
+      {view === 'audit' && <AuditView />}
 
       {view === 'map' && selectedVideo && (
         <VideoPanel

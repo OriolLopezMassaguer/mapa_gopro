@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import config from './config.js';
 import mediaRoutes from './routes/videos.js';
 import passesRoutes from './routes/passes.js';
-import { initializeCache } from './services/cacheManager.js';
+import { loadCache, processNewFiles } from './services/cacheManager.js';
 
 // Prevent process crashes from killing the server
 process.on('uncaughtException', (err) => {
@@ -35,15 +35,37 @@ if (process.env.NODE_ENV === 'production') {
 
 const PORT = config.port;
 app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Media directory: ${config.videoDir}`);
-  console.log('Starting cache initialization...\n');
+  const t0 = Date.now();
+  const elapsed = () => `+${((Date.now() - t0) / 1000).toFixed(1)}s`;
 
+  console.log('');
+  console.log('========================================');
+  console.log('  mapa_gopro server starting');
+  console.log('========================================');
+  console.log(`  Port        : ${PORT}`);
+  console.log(`  Video dir   : ${config.videoDir}`);
+  console.log(`  Media dir   : ${config.mediaDir}`);
+  console.log(`  Cache dir   : ${config.cacheDir}`);
+  console.log(`  Concurrency : ${process.env.CACHE_CONCURRENCY || 4}`);
+  console.log(`  Env         : ${process.env.NODE_ENV || 'development'}`);
+  console.log('');
+
+  let toProcess = [];
   try {
-    await initializeCache();
-    console.log('\nServer ready with all cached data.');
+    toProcess = await loadCache();
   } catch (err) {
-    console.error('Cache initialization error:', err.message);
-    console.log('Server continues running with whatever data was loaded.');
+    console.error(`[${elapsed()}] Cache load error:`, err.message);
   }
+
+  console.log('');
+  console.log('========================================');
+  console.log(`  READY — http://localhost:${PORT}  (${elapsed()})`);
+  if (toProcess.length > 0)
+    console.log(`  ${toProcess.length} new files queued for background processing`);
+  console.log('========================================');
+  console.log('');
+
+  processNewFiles(toProcess).catch(err =>
+    console.error('Background cache update error:', err.message)
+  );
 });
