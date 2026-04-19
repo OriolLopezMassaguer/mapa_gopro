@@ -6,7 +6,10 @@ import config from '../config.js';
 export function generateThumbnail(videoPath, videoId) {
   const outputPath = path.join(config.thumbnailDir, `${videoId}.jpg`);
 
-  if (fs.existsSync(outputPath)) return Promise.resolve();
+  if (fs.existsSync(outputPath)) {
+    if (fs.statSync(outputPath).size >= 100) return Promise.resolve();
+    fs.unlinkSync(outputPath); // corrupt — delete and regenerate
+  }
 
   return new Promise((resolve, reject) => {
     execFile('ffmpeg', [

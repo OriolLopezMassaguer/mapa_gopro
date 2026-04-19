@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import config from './config.js';
 import mediaRoutes from './routes/videos.js';
 import passesRoutes from './routes/passes.js';
-import { loadCache, processNewFiles } from './services/cacheManager.js';
+import { loadCache, processNewFiles, generateMissingThumbnails } from './services/cacheManager.js';
 
 // Prevent process crashes from killing the server
 process.on('uncaughtException', (err) => {
@@ -65,7 +65,7 @@ app.listen(PORT, async () => {
   console.log('========================================');
   console.log('');
 
-  processNewFiles(toProcess).catch(err =>
-    console.error('Background cache update error:', err.message)
-  );
+  processNewFiles(toProcess)
+    .then(() => generateMissingThumbnails())
+    .catch(err => console.error('Background cache update error:', err.message));
 });

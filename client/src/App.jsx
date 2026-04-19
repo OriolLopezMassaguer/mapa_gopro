@@ -7,7 +7,7 @@ import { useVideos } from './hooks/useVideos';
 import { useTelemetry } from './hooks/useTelemetry';
 import { fetchAllTracks, fetchAllPassWaypoints } from './services/api';
 import './App.css';
-import { YEAR_PALETTE, MONTH_NAMES, REGIONS, inRegion } from './constants';
+import { YEAR_PALETTE, MONTH_NAMES, REGIONS, inRegion, classifyPassFile } from './constants';
 
 function App() {
   const { videos, loading, error, refresh: refreshVideos } = useVideos();
@@ -64,6 +64,16 @@ function App() {
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allPassIndex, mediaBounds]);
+
+  const groupedPassFiles = useMemo(() => {
+    const map = new Map();
+    for (const f of passFiles) {
+      const g = classifyPassFile(f);
+      if (!map.has(g.id)) map.set(g.id, { id: g.id, name: g.name, files: [] });
+      map.get(g.id).files.push(f);
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [passFiles]);
 
   const togglePassFile = (id) => {
     setActivePassFiles(prev => {
@@ -122,16 +132,28 @@ function App() {
 
   const activeRegion = filterRegion ? REGIONS.find(r => r.id === filterRegion) : null;
 
-  const availableCameras = useMemo(() => {
-    const cameras = new Set(videos.map(v => v.camera).filter(Boolean));
-    return [...cameras].sort();
+  const cameraAlias = useMemo(() => {
+    const named = videos.map(v => v.camera).filter(c => c && !/^\d+$/.test(c));
+    const canonical = named.length > 0 ? named[0] : null;
+    const alias = {};
+    if (canonical) {
+      videos.forEach(v => { if (v.camera && /^\d+$/.test(v.camera)) alias[v.camera] = canonical; });
+    }
+    return alias;
   }, [videos]);
+
+  const normalizeCamera = (cam) => (cam && cameraAlias[cam]) ? cameraAlias[cam] : cam;
+
+  const availableCameras = useMemo(() => {
+    const cameras = new Set(videos.map(v => normalizeCamera(v.camera)).filter(Boolean));
+    return [...cameras].sort();
+  }, [videos, cameraAlias]);
 
   const filteredVideos = useMemo(() => {
     return videos.filter(v => {
       if (v.type === 'video' && !showVideos) return false;
       if (v.type === 'photo' && !showPhotos) return false;
-      if (filterCamera && v.camera !== filterCamera) return false;
+      if (filterCamera && normalizeCamera(v.camera) !== filterCamera) return false;
       if (activeRegion && !inRegion(v, activeRegion)) return false;
       if (!v.startDate) return !filterYear;
       const d = new Date(v.startDate);
@@ -140,7 +162,7 @@ function App() {
       if (filterDay && d.getDate() !== filterDay) return false;
       return true;
     });
-  }, [videos, showVideos, showPhotos, filterCamera, filterYear, filterMonth, filterDay, activeRegion]);
+  }, [videos, showVideos, showPhotos, filterCamera, filterYear, filterMonth, filterDay, activeRegion, cameraAlias]);
 
   const handleFilterYear = (year) => {
     if (filterYear === year) { setFilterYear(null); setFilterMonth(null); setFilterDay(null); }
@@ -179,6 +201,144 @@ function App() {
 
   return (
     <div className="app">
+      {view === 'map' && (
+        <div className="year-filter-bar">
+          {/* Row 1: type toggles + cameras */}
+          <div className="filter-row">
+            <div className="year-filter-years">
+              <button
+                className={`type-toggle${showVideos ? ' type-toggle--active' : ''}`}
+                onClick={() => setShowVideos(v => !v)}
+              >
+                &#9654; Videos
+              </button>
+              <button
+                className={`type-toggle${showPhotos ? ' type-toggle--active' : ''}`}
+                onClick={() => setShowPhotos(v => !v)}
+              >
+                &#9679; Photos
+              </button>
+              {passFiles.length > 0 && (
+                <button
+                  className={`type-toggle${showPassMarkers ? ' type-toggle--active' : ''}`}
+                  onClick={() => setShowPassMarkers(v => !v)}
+                >
+                  &#9650; Passes
+                </button>
+              )}
+            </div>
+            {availableCameras.length > 1 && (
+              <div className="year-filter-years">
+                <button
+                  className={`camera-pill${filterCamera === null ? ' camera-pill--active' : ''}`}
+                  onClick={() => setFilterCamera(null)}
+                >
+                  All cameras
+                </button>
+                {availableCameras.map(cam => (
+                  <button
+                    key={cam}
+                    className={`camera-pill${filterCamera === cam ? ' camera-pill--active' : ''}`}
+                    onClick={() => setFilterCamera(filterCamera === cam ? null : cam)}
+                  >
+                    {cam}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Row 2: regions + pass files */}
+          <div className="filter-row">
+            <div className="year-filter-years">
+              <button
+                className={`region-pill${filterRegion === null ? ' region-pill--active' : ''}`}
+                onClick={() => setFilterRegion(null)}
+              >
+                All
+              </button>
+              {REGIONS.map(r => (
+                <button
+                  key={r.id}
+                  className={`region-pill${filterRegion === r.id ? ' region-pill--active' : ''}`}
+                  onClick={() => handleFilterRegion(r.id)}
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
+            {passFiles.length > 0 && showPassMarkers && groupedPassFiles.map(group => (
+              <div key={group.id} className="year-filter-years pass-group">
+                <span className="pass-group-label">{group.name}</span>
+                {group.files.map(f => (
+                  <button
+                    key={f.id}
+                    className={`month-pill${activePassFiles.has(f.id) ? ' month-pill--active' : ''}`}
+                    style={activePassFiles.has(f.id) ? { background: '#7c3aed', borderColor: '#7c3aed' } : {}}
+                    onClick={() => togglePassFile(f.id)}
+                  >
+                    {f.name}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+          {/* Row 3: year + month + day */}
+          <div className="filter-row">
+            {availableYears.length > 0 && (
+              <div className="year-filter-years">
+                <button
+                  className={`year-pill${filterYear === null ? ' year-pill--active' : ''}`}
+                  style={filterYear === null ? { background: '#374151', borderColor: '#374151' } : {}}
+                  onClick={() => { setFilterYear(null); setFilterMonth(null); setFilterDay(null); }}
+                >
+                  All
+                </button>
+                {availableYears.map(year => (
+                  <button
+                    key={year}
+                    className={`year-pill${filterYear === year ? ' year-pill--active' : ''}`}
+                    style={filterYear === year ? { background: yearColorMap[year], borderColor: yearColorMap[year] } : { borderColor: yearColorMap[year] }}
+                    onClick={() => handleFilterYear(year)}
+                  >
+                    <span className="year-pill-dot" style={{ background: yearColorMap[year] }}></span>
+                    {year}
+                  </button>
+                ))}
+              </div>
+            )}
+            {filterYear && availableMonths.length > 0 && (
+              <div className="year-filter-years">
+                {availableMonths.map(m => (
+                  <button
+                    key={m}
+                    className={`month-pill${filterMonth === m ? ' month-pill--active' : ''}`}
+                    style={filterMonth === m ? { background: yearColorMap[filterYear], borderColor: yearColorMap[filterYear] } : {}}
+                    onClick={() => handleFilterMonth(m)}
+                  >
+                    {MONTH_NAMES[m - 1]}
+                  </button>
+                ))}
+              </div>
+            )}
+            {filterMonth && availableDays.length > 0 && (
+              <div className="year-filter-years">
+                {availableDays.map(d => (
+                  <button
+                    key={d}
+                    className={`month-pill${filterDay === d ? ' month-pill--active' : ''}`}
+                    style={filterDay === d ? { background: yearColorMap[filterYear], borderColor: yearColorMap[filterYear] } : {}}
+                    onClick={() => handleFilterDay(d)}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="map-area">
       <div className="view-toggle">
         <button
           className={`view-btn${view === 'map' ? ' view-btn--active' : ''}`}
@@ -199,133 +359,6 @@ function App() {
           Audit
         </button>
       </div>
-
-      {view === 'map' && (
-        <div className="year-filter-bar">
-          <div className="year-filter-years">
-            <button
-              className={`type-toggle${showVideos ? ' type-toggle--active' : ''}`}
-              onClick={() => setShowVideos(v => !v)}
-            >
-              &#9654; Videos
-            </button>
-            <button
-              className={`type-toggle${showPhotos ? ' type-toggle--active' : ''}`}
-              onClick={() => setShowPhotos(v => !v)}
-            >
-              &#9679; Photos
-            </button>
-            {passFiles.length > 0 && (
-              <button
-                className={`type-toggle${showPassMarkers ? ' type-toggle--active' : ''}`}
-                onClick={() => setShowPassMarkers(v => !v)}
-              >
-                &#9650; Passes
-              </button>
-            )}
-          </div>
-          {availableCameras.length > 1 && (
-            <div className="year-filter-years">
-              <button
-                className={`camera-pill${filterCamera === null ? ' camera-pill--active' : ''}`}
-                onClick={() => setFilterCamera(null)}
-              >
-                All cameras
-              </button>
-              {availableCameras.map(cam => (
-                <button
-                  key={cam}
-                  className={`camera-pill${filterCamera === cam ? ' camera-pill--active' : ''}`}
-                  onClick={() => setFilterCamera(filterCamera === cam ? null : cam)}
-                >
-                  {cam}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="year-filter-years">
-            <button
-              className={`region-pill${filterRegion === null ? ' region-pill--active' : ''}`}
-              onClick={() => setFilterRegion(null)}
-            >
-              All
-            </button>
-            {REGIONS.map(r => (
-              <button
-                key={r.id}
-                className={`region-pill${filterRegion === r.id ? ' region-pill--active' : ''}`}
-                onClick={() => handleFilterRegion(r.id)}
-              >
-                {r.name}
-              </button>
-            ))}
-          </div>
-          {availableYears.length > 0 && (
-            <div className="year-filter-years">
-              <button
-                className={`year-pill${filterYear === null ? ' year-pill--active' : ''}`}
-                style={filterYear === null ? { background: '#374151', borderColor: '#374151' } : {}}
-                onClick={() => { setFilterYear(null); setFilterMonth(null); setFilterDay(null); }}
-              >
-                All
-              </button>
-              {availableYears.map(year => (
-                <button
-                  key={year}
-                  className={`year-pill${filterYear === year ? ' year-pill--active' : ''}`}
-                  style={filterYear === year ? { background: yearColorMap[year], borderColor: yearColorMap[year] } : { borderColor: yearColorMap[year] }}
-                  onClick={() => handleFilterYear(year)}
-                >
-                  <span className="year-pill-dot" style={{ background: yearColorMap[year] }}></span>
-                  {year}
-                </button>
-              ))}
-            </div>
-          )}
-          {passFiles.length > 0 && showPassMarkers && (
-            <div className="year-filter-years">
-              {passFiles.map(f => (
-                <button
-                  key={f.id}
-                  className={`month-pill${activePassFiles.has(f.id) ? ' month-pill--active' : ''}`}
-                  style={activePassFiles.has(f.id) ? { background: '#7c3aed', borderColor: '#7c3aed' } : {}}
-                  onClick={() => togglePassFile(f.id)}
-                >
-                  {f.name}
-                </button>
-              ))}
-            </div>
-          )}
-          {filterYear && availableMonths.length > 1 && (
-            <div className="year-filter-months">
-              {availableMonths.map(m => (
-                <button
-                  key={m}
-                  className={`month-pill${filterMonth === m ? ' month-pill--active' : ''}`}
-                  style={filterMonth === m ? { background: yearColorMap[filterYear], borderColor: yearColorMap[filterYear] } : {}}
-                  onClick={() => handleFilterMonth(m)}
-                >
-                  {MONTH_NAMES[m - 1]}
-                </button>
-              ))}
-            </div>
-          )}
-          {filterMonth && availableDays.length > 1 && (
-            <div className="year-filter-months">
-              {availableDays.map(d => (
-                <button
-                  key={d}
-                  className={`month-pill${filterDay === d ? ' month-pill--active' : ''}`}
-                  style={filterDay === d ? { background: yearColorMap[filterYear], borderColor: yearColorMap[filterYear] } : {}}
-                  onClick={() => handleFilterDay(d)}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {view === 'map' && (
         <MapView
@@ -385,6 +418,7 @@ function App() {
           No GoPro videos with GPS data found.
         </div>
       )}
+      </div>
     </div>
   );
 }

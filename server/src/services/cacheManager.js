@@ -436,6 +436,26 @@ export async function processNewFiles(toProcess) {
   console.log(`  ${mediaIndex.size} total items with GPS on map`);
 }
 
+export async function generateMissingThumbnails() {
+  const missing = Array.from(allMediaIndex.values()).filter(
+    e => e.type === 'video' && !e.noGps && !thumbnailSet.has(e.id)
+  );
+  if (missing.length === 0) return;
+  console.log(`\nThumbnail backfill: ${missing.length} videos missing thumbnails…`);
+  let done = 0, failed = 0;
+  await runPool(missing, async (entry) => {
+    try {
+      await generateThumbnail(entry.filepath, entry.id);
+      thumbnailSet.add(entry.id);
+      invalidate();
+      done++;
+    } catch {
+      failed++;
+    }
+  }, CACHE_CONCURRENCY);
+  console.log(`Thumbnail backfill complete: ${done} generated, ${failed} failed`);
+}
+
 export function getMediaItems() {
   if (!mediaItemsDirty) return cachedMediaItems;
   cachedMediaItems = Array.from(mediaIndex.values())
