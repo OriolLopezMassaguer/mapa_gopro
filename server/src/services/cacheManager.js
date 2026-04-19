@@ -231,7 +231,7 @@ async function processVideo(file, prefix) {
       await generateThumbnail(file.filepath, file.id);
       thumbnailSet.add(file.id);
     } catch (err) {
-      console.log(`  Thumbnail failed: ${err.message}`);
+      console.log(`  Thumbnail failed: ${err.message}${err.stderr ? '\n' + err.stderr : ''}`);
     }
 
     invalidate();

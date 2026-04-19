@@ -10,8 +10,8 @@ export function generateThumbnail(videoPath, videoId) {
 
   return new Promise((resolve, reject) => {
     execFile('ffmpeg', [
-      '-i', videoPath,
       '-ss', '2',
+      '-i', videoPath,
       '-vframes', '1',
       '-vf', 'scale=320:180',
       '-q:v', '5',
