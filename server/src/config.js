@@ -17,12 +17,17 @@ const excludePhotoPrefixes = (process.env.EXCLUDE_PHOTO_PREFIXES || 'DSC')
   .map(p => p.trim().toUpperCase())
   .filter(Boolean);
 
+const videoDir = process.env.VIDEO_DIR || '\\\\babel\\Alpes';
+const mediaDir = path.join(videoDir, process.env.MEDIA_SUBDIR || 'media');
+const cacheDir = path.join(videoDir, 'video_cache');
+
 export default {
-  videoDir: process.env.VIDEO_DIR || '\\\\babel\\Alpes',
+  videoDir,
+  mediaDir,
   port: parseInt(process.env.PORT, 10) || 3001,
-  cacheDir: path.resolve(__dirname, '../cache-data'),
-  metadataDir: path.resolve(__dirname, '../cache-data/metadata'),
-  thumbnailDir: path.resolve(__dirname, '../cache-data/thumbnails'),
+  cacheDir,
+  metadataDir: path.join(cacheDir, 'metadata'),
+  thumbnailDir: path.join(cacheDir, 'thumbnails'),
   passesDir: path.resolve(__dirname, '../../passes'),
   excludedDirs,
   excludePhotoPrefixes,

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import path from 'path';
-import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getAllVideoTracks, getVideoTelemetry, getMediaFilePath, getMediaType, getThumbnailPath } from '../services/cacheManager.js';
+import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getAllVideoTracks, getVideoTelemetry, getMediaFilePath, getMediaType, getThumbnailPath, recheckMediaItem, auditCache } from '../services/cacheManager.js';
 import { generateKml } from '../services/kmlExporter.js';
 import { streamVideo } from '../services/videoStreamer.js';
 
@@ -15,6 +15,11 @@ router.get('/', (req, res) => {
 // GET /api/media/all — all media including items without GPS
 router.get('/all', (req, res) => {
   res.json(getAllMediaItems());
+});
+
+// GET /api/media/audit — compare disk vs cache, report missing entries
+router.get('/audit', async (req, res) => {
+  res.json(await auditCache());
 });
 
 // GET /api/media/export.kml — download all GPS tracks as KML
@@ -58,6 +63,15 @@ router.get('/:id/export.kml', (req, res) => {
   res.setHeader('Content-Type', 'application/vnd.google-earth.kml+xml');
   res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
   res.send(kml);
+});
+
+// POST /api/media/:id/recheck — force re-extraction of GPS, bypassing the cache.
+// Use when cached GPS coordinates are wrong (e.g. GPS spike or cold-start stale position).
+router.post('/:id/recheck', async (req, res) => {
+  const outcome = await recheckMediaItem(req.params.id);
+  if (!outcome) return res.status(404).json({ error: 'Media item not found' });
+  if (outcome.error) return res.status(500).json({ error: outcome.error });
+  res.json({ ok: true, result: outcome.result, entry: outcome.entry });
 });
 
 // GET /api/media/:id/telemetry — GPS track for a video

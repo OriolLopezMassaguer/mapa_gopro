@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import VideoPlayer from './VideoPlayer';
-import { getThumbnailUrl, getStreamUrl, getKmlUrl } from '../services/api';
+import { getThumbnailUrl, getStreamUrl, getKmlUrl, recheckMedia } from '../services/api';
 
 
 function formatDuration(ms) {
@@ -10,7 +11,22 @@ function formatDuration(ms) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function MediaPanel({ item, track, trackLoading, onClose }) {
+export default function MediaPanel({ item, track, trackLoading, onClose, onRecheckDone }) {
+  const [recheckLoading, setRecheckLoading] = useState(false);
+  const [recheckError, setRecheckError] = useState(null);
+
+  async function handleRecheck() {
+    setRecheckLoading(true);
+    setRecheckError(null);
+    try {
+      const data = await recheckMedia(item.id);
+      onRecheckDone?.(data.entry);
+    } catch (err) {
+      setRecheckError(err.response?.data?.error || err.message || 'Recheck failed');
+    } finally {
+      setRecheckLoading(false);
+    }
+  }
   const isVideo = item.type === 'video';
   const isPhoto = item.type === 'photo';
 
@@ -45,6 +61,15 @@ export default function MediaPanel({ item, track, trackLoading, onClose }) {
               ↓
             </a>
           )}
+          <button
+            className="panel-download-btn"
+            onClick={handleRecheck}
+            disabled={recheckLoading}
+            title="Re-extract GPS coordinates from source file"
+            style={{ fontSize: 14, cursor: recheckLoading ? 'wait' : 'pointer' }}
+          >
+            {recheckLoading ? '…' : '↺'}
+          </button>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
       </div>
@@ -109,6 +134,8 @@ export default function MediaPanel({ item, track, trackLoading, onClose }) {
         )}
 
         {trackLoading && <div className="loading-track">Loading GPS track...</div>}
+        {recheckLoading && <div className="loading-track">Re-extracting GPS from source file…</div>}
+        {recheckError && <div className="loading-track" style={{ color: '#c00' }}>{recheckError}</div>}
       </div>
     </div>
   );

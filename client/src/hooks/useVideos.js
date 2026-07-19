@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchMedia } from '../services/api';
 
 export function useVideos() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,7 +27,7 @@ export function useVideos() {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshKey]);
 
-  return { videos, loading, error };
+  return { videos, loading, error, refresh };
 }

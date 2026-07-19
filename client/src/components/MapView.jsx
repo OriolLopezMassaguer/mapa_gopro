@@ -90,24 +90,26 @@ function createPassIcon() {
 
 const PASS_ICON = createPassIcon();
 
-function FitBounds({ track, selectedItem, mediaItems }) {
+function FitBounds({ track, selectedItem, mediaItems, passWaypoints }) {
   const map = useMap();
 
   useEffect(() => {
     if (track?.coordinates?.length > 1) {
       const bounds = track.coordinates.map(c => [c.lat, c.lon]);
       map.fitBounds(bounds, { padding: [50, 50] });
-    } else if (selectedItem) {
+    } else if (selectedItem?.startPoint) {
       map.setView([selectedItem.startPoint.lat, selectedItem.startPoint.lon], 15);
     }
   }, [track, selectedItem, map]);
 
   useEffect(() => {
-    if (mediaItems.length > 0 && !selectedItem) {
-      const bounds = mediaItems.map(v => [v.startPoint.lat, v.startPoint.lon]);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [mediaItems, selectedItem, map]);
+    if (selectedItem) return;
+    const pts = [
+      ...mediaItems.filter(v => v.startPoint).map(v => [v.startPoint.lat, v.startPoint.lon]),
+      ...passWaypoints.map(w => [w.lat, w.lon]),
+    ];
+    if (pts.length > 0) map.fitBounds(pts, { padding: [50, 50] });
+  }, [mediaItems, passWaypoints, selectedItem, map]);
 
   return null;
 }
@@ -132,7 +134,7 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <FitBounds track={track} selectedItem={selectedItem} mediaItems={mediaItems} />
+        <FitBounds track={track} selectedItem={selectedItem} mediaItems={mediaItems} passWaypoints={passWaypoints} />
 
         {regions.map(r => {
           const isActive = filterRegion === r.id;
@@ -150,27 +152,28 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
           );
         })}
 
-        {filteredTracks.map(t => (
-          <Polyline
-            key={t.id}
-            positions={t.coordinates.map(c => [c.lat, c.lon])}
-            pathOptions={
-              selectedItem?.id === t.id
-                ? { color: '#e74c3c', weight: 4, opacity: 0.9 }
-                : (() => {
-                    const item = mediaItems.find(v => v.id === t.id);
-                    const color = item ? getColor(item, yearColorMap) : '#2563eb';
-                    return { color, weight: 2.5, opacity: 0.55 };
-                  })()
-            }
-            eventHandlers={{
-              click: () => {
-                const item = mediaItems.find(v => v.id === t.id);
-                if (item) onSelectItem(item);
-              }
-            }}
-          />
-        ))}
+        {filteredTracks.map(t => {
+          const positions = t.coordinates.map(c => [c.lat, c.lon]);
+          const isSelected = selectedItem?.id === t.id;
+          const item = mediaItems.find(v => v.id === t.id);
+          const color = item ? getColor(item, yearColorMap) : '#2563eb';
+          const handleClick = () => { if (item) onSelectItem(item); };
+          return (
+            <>
+              <Polyline
+                key={t.id}
+                positions={positions}
+                pathOptions={isSelected ? { color: '#e74c3c', weight: 4, opacity: 0.9 } : { color, weight: 2.5, opacity: 0.55 }}
+              />
+              <Polyline
+                key={`${t.id}-hit`}
+                positions={positions}
+                pathOptions={{ color: '#000', weight: 12, opacity: 0.001 }}
+                eventHandlers={{ click: handleClick }}
+              />
+            </>
+          );
+        })}
 
         {mediaItems.map(item => (
           <Marker

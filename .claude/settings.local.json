@@ -39,7 +39,11 @@
       "Read(///babel/Alpes/videos gopro/**)",
       "Bash(net view:*)",
       "Read(///babel/Alpes/alpes2022/**)",
-      "Bash(node server/migrate-cache.js)"
+      "Bash(node server/migrate-cache.js)",
+      "Bash(curl -s http://localhost:3001/api/videos)",
+      "Bash(curl -s http://localhost:3001/api/media/all)",
+      "Bash(curl -s http://127.0.0.1:3001/api/media/all)",
+      "Bash(curl -v http://127.0.0.1:3001/api/media/all)"
     ]
   }
 }

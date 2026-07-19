@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 
 const CHUNKED_THRESHOLD = 500 * 1024 * 1024; // 500 MB — use chunked reading for large files
 const IMPOSSIBLE_SPEED_MS = 200; // m/s = 720 km/h — impossible for any ground/air GoPro use
+const SPIKE_SPEED_MS = 100;      // m/s = 360 km/h — bilateral threshold for single-point spike removal
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
@@ -18,11 +19,35 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
+ * Remove individual GPS spike points from a segment.
+ * A spike is a point that requires high speed both to arrive at AND to leave —
+ * the classic GPS teleport glitch where a single sample lands far off-track.
+ */
+function removeSpikePoints(coords) {
+  if (coords.length < 3) return coords;
+
+  return coords.filter((point, i) => {
+    if (i === 0 || i === coords.length - 1) return true; // always keep endpoints
+
+    const prev = coords[i - 1];
+    const next = coords[i + 1];
+
+    const dt_in  = (point.cts - prev.cts) / 1000;
+    const dt_out = (next.cts  - point.cts) / 1000;
+    if (dt_in < 0.1 || dt_out < 0.1) return true; // too close in time to judge
+
+    const speed_in  = haversineDistance(prev.lat, prev.lon, point.lat, point.lon) / dt_in;
+    const speed_out = haversineDistance(point.lat, point.lon, next.lat, next.lon) / dt_out;
+
+    // Both legs fast → isolated spike; remove it
+    return !(speed_in > SPIKE_SPEED_MS && speed_out > SPIKE_SPEED_MS);
+  });
+}
+
+/**
  * Remove GPS points reachable only via impossible speed (GPS teleport glitch).
- * Splits the track into segments at each impossible jump, then returns the first
- * segment with more than 3 points — which handles both:
- *   - GPS losing lock mid-recording (correct first segment, wrong tail)
- *   - Cold-start stale position (1–3 wrong initial points, correct rest)
+ * Splits the track into segments at each impossible jump, picks the longest
+ * segment (the real recording), then strips any remaining single-point spikes.
  */
 function filterGpsOutliers(coordinates) {
   if (coordinates.length <= 3) return coordinates;
@@ -38,23 +63,29 @@ function filterGpsOutliers(coordinates) {
     if (dist / dt > IMPOSSIBLE_SPEED_MS) jumpIndices.push(i);
   }
 
-  if (jumpIndices.length === 0) return coordinates;
+  let best;
+  if (jumpIndices.length === 0) {
+    best = coordinates;
+  } else {
+    // Split into segments at jump boundaries
+    const segments = [];
+    let start = 0;
+    for (const idx of jumpIndices) {
+      if (idx > start) segments.push(coordinates.slice(start, idx));
+      start = idx;
+    }
+    segments.push(coordinates.slice(start));
 
-  // Split into segments at jump boundaries
-  const segments = [];
-  let start = 0;
-  for (const idx of jumpIndices) {
-    if (idx > start) segments.push(coordinates.slice(start, idx));
-    start = idx;
+    // Pick the longest segment with > 3 points — the real recording is far longer
+    // than GPS glitches or cold-start stale positions regardless of where they appear.
+    const valid = segments.filter(seg => seg.length > 3);
+    best = valid.length > 0
+      ? valid.reduce((a, b) => b.length > a.length ? b : a)
+      : segments.reduce((a, b) => b.length > a.length ? b : a);
   }
-  segments.push(coordinates.slice(start));
 
-  // Return first segment with > 3 points (skips cold-start stale noise at the beginning)
-  for (const seg of segments) {
-    if (seg.length > 3) return seg;
-  }
-  // Fallback: longest segment
-  return segments.reduce((best, seg) => seg.length > best.length ? seg : best, segments[0]);
+  // Second pass: remove individual spike points within the chosen segment
+  return removeSpikePoints(best);
 }
 
 /**

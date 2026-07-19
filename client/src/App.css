@@ -5,9 +5,16 @@
 }
 
 .app {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+}
+
+.map-area {
+  position: relative;
+  flex: 1;
   overflow: hidden;
 }
 
@@ -22,7 +29,7 @@
   top: 0;
   right: 0;
   width: 420px;
-  height: 100vh;
+  height: 100%;
   background: #fff;
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
   overflow-y: auto;
@@ -239,7 +246,6 @@
   display: flex;
   flex-direction: column;
   background: #f8f9fa;
-  padding-top: 52px;
 }
 
 .table-filter-row {
@@ -387,34 +393,50 @@
 
 /* Year filter bar */
 .year-filter-bar {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 1500;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.filter-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filter-row:last-child {
+  border-bottom: none;
 }
 
 .year-filter-years,
 .year-filter-months {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(4px);
-  border-radius: 10px;
-  padding: 6px 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border-radius: 0;
+  padding: 2px 8px;
+  box-shadow: none;
+  border-right: 1px solid #e5e7eb;
+}
+
+.year-filter-years:last-child,
+.year-filter-months:last-child {
+  border-right: none;
 }
 
 .year-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 14px;
-  font-size: 12px;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   border: 2px solid transparent;
@@ -441,8 +463,8 @@
 }
 
 .month-pill {
-  padding: 3px 9px;
-  border-radius: 12px;
+  padding: 2px 7px;
+  border-radius: 10px;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -462,9 +484,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   border: 1.5px solid #6b7280;
@@ -485,9 +507,9 @@
 .camera-pill {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   border: 1.5px solid #0891b2;
@@ -502,6 +524,16 @@
 .camera-pill--active {
   background: #0891b2;
   color: #fff;
+}
+
+.pass-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  padding-right: 2px;
 }
 
 .pass-toggle {
@@ -530,9 +562,9 @@
 .region-pill {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 14px;
-  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   border: 1.5px solid #d1d5db;
