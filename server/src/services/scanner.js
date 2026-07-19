@@ -43,9 +43,6 @@ function scanRecursive(dir, results, isTopLevel = false) {
     const isPhoto = PHOTO_EXTS.test(entry);
     if (!isVideo && !isPhoto) continue;
 
-    // Skip photos whose filename starts with an excluded prefix (e.g. Sony DSC_XXXX)
-    if (isPhoto && config.excludePhotoPrefixes.some(p => entry.toUpperCase().startsWith(p))) continue;
-
     // Build a unique ID from the relative path (handles same filename in different folders)
     const relPath = path.relative(config.videoDir, filepath);
     const id = relPath.replace(/[\\/]/g, '_').replace(/\.[^.]+$/, '');

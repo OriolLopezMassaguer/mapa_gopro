@@ -219,7 +219,6 @@ export async function extractVideoTelemetry(filePath) {
   const deviceId = Object.keys(telemetry)[0];
   if (!deviceId) return null;
 
-  const camera = deviceId || null;
   const streams = telemetry[deviceId]?.streams;
   if (!streams) return null;
 
@@ -263,7 +262,6 @@ export async function extractVideoTelemetry(filePath) {
   const filtered = filterGpsOutliers(coordinates);
 
   return {
-    camera,
     startPoint: { lat: filtered[0].lat, lon: filtered[0].lon },
     endPoint: { lat: filtered[filtered.length - 1].lat, lon: filtered[filtered.length - 1].lon },
     coordinates: filtered,
@@ -288,12 +286,7 @@ export async function extractPhotoGps(filePath) {
       return null;
     }
 
-    const make = exif.Make?.trim() || '';
-    const model = exif.Model?.trim() || '';
-    const camera = [make, model].filter(Boolean).join(' ') || null;
-
     return {
-      camera,
       startPoint: { lat: exif.latitude, lon: exif.longitude },
       altitude: exif.GPSAltitude || null,
       startDate: exif.DateTimeOriginal || exif.CreateDate || null,
