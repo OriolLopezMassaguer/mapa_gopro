@@ -175,9 +175,11 @@ npm run electron:build
 
 This runs three steps automatically:
 
-1. `scripts/prepare-build.mjs` — copies the ffmpeg binary from `ffmpeg-static` into `build-resources/`
+1. `scripts/prepare-build.mjs` — finds `ffmpeg` on your `PATH` and copies it to `build-resources/`. You can also skip this by placing `ffmpeg.exe` in `build-resources/` manually before building.
 2. `npm run build --prefix client` — compiles the React app into `client/dist/`
 3. `electron-builder` — produces `dist-electron/Mapa GoPro Setup x.x.x.exe`
+
+> **Note:** ffmpeg must be on your `PATH` at build time (or pre-placed in `build-resources/`). It is bundled into the installer so end users do not need to install it separately.
 
 ### Unpackaged test (no installer)
 

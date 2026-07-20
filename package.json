@@ -14,8 +14,7 @@
   "devDependencies": {
     "concurrently": "^9.1.0",
     "electron": "^32.0.0",
-    "electron-builder": "^25.0.0",
-    "ffmpeg-static": "^5.2.0"
+    "electron-builder": "^25.0.0"
   },
   "build": {
     "appId": "com.oriol.mapa-gopro",

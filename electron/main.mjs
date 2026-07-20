@@ -21,10 +21,10 @@ function saveSettings(data) {
 
 // ── ffmpeg ────────────────────────────────────────────────────────────────────
 
-async function resolveFfmpegPath() {
+function resolveFfmpegPath() {
   if (isDev) {
-    const { default: p } = await import('ffmpeg-static')
-    return p
+    // In dev, use whatever ffmpeg is on PATH (env var lets you override)
+    return process.env.FFMPEG_PATH || null
   }
   const bin = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'
   return path.join(process.resourcesPath, bin)
@@ -136,7 +136,7 @@ app.whenReady().then(async () => {
   buildMenu(videoDir)
 
   // Set environment for the Express server before importing it
-  const ffmpegPath = await resolveFfmpegPath()
+  const ffmpegPath = resolveFfmpegPath()
   process.env.VIDEO_DIR   = videoDir
   process.env.FFMPEG_PATH = ffmpegPath
   process.env.PORT        = String(settings.port || 3001)
