@@ -12,7 +12,7 @@ export function generateThumbnail(videoPath, videoId) {
   }
 
   return new Promise((resolve, reject) => {
-    execFile('ffmpeg', [
+    execFile(config.ffmpegPath || process.env.FFMPEG_PATH || 'ffmpeg', [
       '-ss', '2',
       '-i', videoPath,
       '-vframes', '1',

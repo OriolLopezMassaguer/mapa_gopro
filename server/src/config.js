@@ -31,4 +31,5 @@ export default {
   passesDir: path.resolve(__dirname, '../../passes'),
   excludedDirs,
   excludePhotoPrefixes,
+  ffmpegPath: process.env.FFMPEG_PATH || null,
 };

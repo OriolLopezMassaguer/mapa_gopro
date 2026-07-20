@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-3001}:3001"
+    volumes:
+      - "${VIDEO_DIR}:/videos:ro"
+    environment:
+      VIDEO_DIR: /videos
+      MEDIA_SUBDIR: "${MEDIA_SUBDIR:-media}"
+      PORT: 3001
+      CACHE_CONCURRENCY: "${CACHE_CONCURRENCY:-4}"
+    restart: unless-stopped

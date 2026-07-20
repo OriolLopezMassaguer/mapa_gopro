@@ -2,12 +2,51 @@
   "name": "mapa-gopro",
   "version": "1.0.0",
   "private": true,
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "dev:server": "npm run dev --prefix server",
-    "dev:client": "npm run dev --prefix client"
+    "dev:client": "npm run dev --prefix client",
+    "electron:dev": "concurrently \"npm run dev:client\" \"electron .\"",
+    "electron:build": "node scripts/prepare-build.mjs && npm run build --prefix client && npm ci --omit=dev --prefix server && electron-builder",
+    "electron:pack": "node scripts/prepare-build.mjs && npm run build --prefix client && electron-builder --dir"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0",
+    "ffmpeg-static": "^5.2.0"
+  },
+  "build": {
+    "appId": "com.oriol.mapa-gopro",
+    "productName": "Mapa GoPro",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**",
+      "server/src/**",
+      "server/package.json",
+      "server/node_modules/**",
+      "client/dist/**",
+      "passes/**",
+      "scanner-exclude.json",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build-resources/ffmpeg.exe",
+        "to": "ffmpeg.exe"
+      }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }
