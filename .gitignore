@@ -6,3 +6,4 @@ server/cache-data/
 certs/*
 dist-electron/*
 build-resources/*
+electron/*

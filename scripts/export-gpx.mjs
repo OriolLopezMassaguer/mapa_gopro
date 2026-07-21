@@ -1,8 +1,8 @@
 /**
  * Scans VIDEO_DIR for all videos, extracts GPS telemetry, and writes one GPX
- * file per video into a tracks/ folder.
+ * file per video into a tracks-videos/ folder.
  * Usage: node scripts/export-gpx.mjs [output-dir]
- * Output defaults to ./tracks/
+ * Output defaults to ./tracks-videos/
  */
 
 import fs from 'fs';
@@ -25,7 +25,7 @@ if (!videoDir) {
 }
 
 const mediaDir  = path.join(videoDir, mediaSubdir);
-const outputDir = process.argv[2] || path.join(root, 'tracks');
+const outputDir = process.argv[2] || path.join(root, 'tracks-videos');
 const VIDEO_EXTS = /\.(mp4|mov|ts)$/i;
 
 fs.mkdirSync(outputDir, { recursive: true });
