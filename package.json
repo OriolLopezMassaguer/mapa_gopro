@@ -21,6 +21,7 @@
   "build": {
     "appId": "com.oriol.mapa-gopro",
     "productName": "Mapa GoPro",
+    "asar": false,
     "directories": {
       "output": "dist-electron"
     },
@@ -29,7 +30,6 @@
       "server/src/**",
       "server/package.json",
       "server/node_modules/**",
-      "client/dist/**",
       "passes/**",
       "scanner-exclude.json",
       "package.json"
@@ -38,6 +38,10 @@
       {
         "from": "build-resources/ffmpeg.exe",
         "to": "ffmpeg.exe"
+      },
+      {
+        "from": "client/dist",
+        "to": "client-dist"
       }
     ],
     "win": {

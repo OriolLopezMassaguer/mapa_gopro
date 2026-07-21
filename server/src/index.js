@@ -26,11 +26,12 @@ app.use('/api/media', mediaRoutes);
 app.use('/api/passes', passesRoutes);
 app.use('/api/recorded-tracks', recordedTracksRoutes);
 
-// In production, serve the built React app
+// In production, serve the built React app from extraResources (real filesystem, not asar)
 if (process.env.NODE_ENV === 'production') {
-  const clientDist = path.join(__dirname, '../../client/dist');
+  const clientDist = process.env.CLIENT_DIST;
+  console.log(`[server] serving client from: ${clientDist}`);
   app.use(express.static(clientDist));
-  app.get('*', (req, res) => {
+  app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 }
