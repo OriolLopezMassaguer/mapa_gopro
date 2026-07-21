@@ -1,0 +1,29 @@
+directories:
+  output: dist-electron
+  buildResources: build
+appId: com.oriol.mapa-gopro
+productName: Mapa GoPro
+files:
+  - filter:
+      - electron/**
+      - server/src/**
+      - server/package.json
+      - server/node_modules/**
+      - client/dist/**
+      - passes/**
+      - scanner-exclude.json
+      - package.json
+extraResources:
+  - from: build-resources/ffmpeg.exe
+    to: ffmpeg.exe
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+electronVersion: 32.3.3

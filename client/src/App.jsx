@@ -5,7 +5,7 @@ import TableView from './components/TableView';
 import AuditView from './components/AuditView';
 import { useVideos } from './hooks/useVideos';
 import { useTelemetry } from './hooks/useTelemetry';
-import { fetchAllTracks, fetchAllPassWaypoints } from './services/api';
+import { fetchAllTracks, fetchAllPassWaypoints, fetchRecordedTracks } from './services/api';
 import './App.css';
 import { YEAR_PALETTE, MONTH_NAMES, REGIONS, inRegion, classifyPassFile } from './constants';
 
@@ -15,6 +15,9 @@ function App() {
   const [telemetryRefreshKey, setTelemetryRefreshKey] = useState(0);
   const { track, loading: trackLoading } = useTelemetry(selectedVideo?.id, telemetryRefreshKey);
   const [allTracks, setAllTracks] = useState([]);
+  const [recordedTracks, setRecordedTracks] = useState([]);
+  const [showRecordedTracks, setShowRecordedTracks] = useState(true);
+  const [recordedTrackDate, setRecordedTrackDate] = useState(null);
   const [allPassIndex, setAllPassIndex] = useState([]); // [{name,lat,lon,ele,source,sourceName}]
   const [activePassFiles, setActivePassFiles] = useState(new Set());
   const [passWaypoints, setPassWaypoints] = useState([]); // waypoints for selected files only
@@ -30,40 +33,28 @@ function App() {
   useEffect(() => {
     fetchAllTracks().then(setAllTracks).catch(() => {});
     fetchAllPassWaypoints().then(setAllPassIndex).catch(() => {});
+    fetchRecordedTracks().then(setRecordedTracks).catch(() => {});
   }, []);
 
-  // Bounding box of all media with GPS, expanded by 1° (~100 km) to avoid being too restrictive
-  const mediaBounds = useMemo(() => {
-    const pts = videos.filter(v => v.startPoint);
-    if (pts.length === 0) return null;
-    let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
-    for (const v of pts) {
-      minLat = Math.min(minLat, v.startPoint.lat);
-      maxLat = Math.max(maxLat, v.startPoint.lat);
-      minLon = Math.min(minLon, v.startPoint.lon);
-      maxLon = Math.max(maxLon, v.startPoint.lon);
-    }
-    const pad = 1;
-    return { minLat: minLat - pad, maxLat: maxLat + pad, minLon: minLon - pad, maxLon: maxLon + pad };
-  }, [videos]);
+  const recordedTrackDates = useMemo(() => {
+    const dates = new Set(recordedTracks.map(t => t.date?.slice(0, 10)).filter(Boolean));
+    return [...dates].sort();
+  }, [recordedTracks]);
 
-  // Pass files whose waypoints fall within the media bounding box
-  const passFiles = useMemo(() => {
+  const visibleRecordedTracks = useMemo(() => {
+    if (!showRecordedTracks) return [];
+    if (!recordedTrackDate) return recordedTracks;
+    return recordedTracks.filter(t => t.date?.startsWith(recordedTrackDate));
+  }, [recordedTracks, showRecordedTracks, recordedTrackDate]);
+
+const passFiles = useMemo(() => {
     const byFile = new Map();
     for (const w of allPassIndex) {
       if (!byFile.has(w.source)) byFile.set(w.source, { id: w.source, name: w.sourceName, waypoints: [] });
       byFile.get(w.source).waypoints.push(w);
     }
-    return [...byFile.values()]
-      .filter(f => {
-        if (!mediaBounds) return true;
-        return f.waypoints.some(w =>
-          w.lat >= mediaBounds.minLat && w.lat <= mediaBounds.maxLat &&
-          w.lon >= mediaBounds.minLon && w.lon <= mediaBounds.maxLon
-        );
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allPassIndex, mediaBounds]);
+    return [...byFile.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allPassIndex]);
 
   const groupedPassFiles = useMemo(() => {
     const map = new Map();
@@ -226,6 +217,14 @@ function App() {
                   &#9650; Passes
                 </button>
               )}
+              {recordedTracks.length > 0 && (
+                <button
+                  className={`type-toggle${showRecordedTracks ? ' type-toggle--active' : ''}`}
+                  onClick={() => setShowRecordedTracks(v => !v)}
+                >
+                  &#9135; Tracks
+                </button>
+              )}
             </div>
             {availableCameras.length > 1 && (
               <div className="year-filter-years">
@@ -282,7 +281,37 @@ function App() {
               </div>
             ))}
           </div>
-          {/* Row 3: year + month + day */}
+          {/* Row 3: recorded track date filter */}
+          {showRecordedTracks && recordedTrackDates.length > 0 && (
+            <div className="filter-row">
+              <div className="year-filter-years">
+                <span className="pass-group-label">Track dates</span>
+                <button
+                  className={`month-pill${recordedTrackDate === null ? ' month-pill--active' : ''}`}
+                  style={recordedTrackDate === null ? { background: '#f97316', borderColor: '#f97316' } : { borderColor: '#f97316' }}
+                  onClick={() => setRecordedTrackDate(null)}
+                >
+                  All
+                </button>
+                {recordedTrackDates.map(d => {
+                  const [year, m, day] = d.split('-');
+                  const label = `${parseInt(day)} ${MONTH_NAMES[parseInt(m) - 1]} ${year}`;
+                  const active = recordedTrackDate === d;
+                  return (
+                    <button
+                      key={d}
+                      className={`month-pill${active ? ' month-pill--active' : ''}`}
+                      style={active ? { background: '#f97316', borderColor: '#f97316' } : { borderColor: '#f97316' }}
+                      onClick={() => setRecordedTrackDate(active ? null : d)}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {/* Row 4: year + month + day */}
           <div className="filter-row">
             {availableYears.length > 0 && (
               <div className="year-filter-years">
@@ -371,6 +400,8 @@ function App() {
           regions={REGIONS}
           filterRegion={filterRegion}
           passWaypoints={visiblePassWaypoints}
+          recordedTracks={visibleRecordedTracks}
+          recordedTrackDate={recordedTrackDate}
         />
       )}
 

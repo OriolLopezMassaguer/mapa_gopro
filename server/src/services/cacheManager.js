@@ -59,7 +59,24 @@ async function loadAllCacheEntries() {
   try {
     const raw = await fs.promises.readFile(CACHE_INDEX_PATH, 'utf-8');
     const obj = JSON.parse(raw);
-    for (const [id, entry] of Object.entries(obj)) diskCache.set(id, entry);
+    let migrated = 0;
+    for (const [id, entry] of Object.entries(obj)) {
+      if (entry.type === 'video' && !entry.noGps && !entry.coordinatesSampled) {
+        try {
+          const full = JSON.parse(fs.readFileSync(getCachePath(id), 'utf-8'));
+          if (full.coordinates?.length) {
+            diskCache.set(id, { ...entry, coordinates: undefined, coordinatesSampled: downsample(full.coordinates) });
+            migrated++;
+            continue;
+          }
+        } catch { }
+      }
+      diskCache.set(id, entry);
+    }
+    if (migrated > 0) {
+      console.log(`  [2] Migrated ${migrated} entries (added coordinatesSampled)`);
+      saveCacheIndex();
+    }
     console.log(`  [2] Done — ${diskCache.size} entries loaded in ${((Date.now() - t0) / 1000).toFixed(1)}s (from cache-index.json)`);
   } catch {
     // First run or corrupt index — rebuild from individual files
@@ -224,7 +241,7 @@ async function processVideo(file, prefix) {
       ...telemetry,
     };
     writeCache(file.id, entry);
-    mediaIndex.set(file.id, entry);
+    mediaIndex.set(file.id, readCache(file.id));
     allMediaIndex.set(file.id, entry);
 
     try {

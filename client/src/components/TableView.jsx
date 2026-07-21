@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { fetchAllMedia, fetchAllPassWaypoints, getThumbnailUrl } from '../services/api';
+import { fetchAllMedia, fetchAllPassWaypoints, fetchRecordedTracks, getThumbnailUrl } from '../services/api';
 import { REGIONS, MONTH_NAMES, inRegion } from '../constants';
 
 const COLUMNS = [
@@ -56,15 +56,15 @@ function getItemZones(item) {
 
 function cellValue(item, key) {
   switch (key) {
-    case 'fileSize':    return item.type === 'pass' ? null : fmtSize(item.fileSize);
+    case 'fileSize':    return (item.type === 'pass' || item.type === 'track') ? null : fmtSize(item.fileSize);
     case 'startDate':   return item.type === 'pass' ? null : fmtDate(item.startDate || item.lastModified);
     case 'startPoint':  return fmtCoord(item.startPoint);
     case 'elevation':   return item.elevation != null ? `${item.elevation} m` : null;
-    case 'endPoint':    return item.type === 'video' ? fmtCoord(item.endPoint) : null;
+    case 'endPoint':    return (item.type === 'video' || item.type === 'track') ? fmtCoord(item.endPoint) : null;
     case 'duration':    return item.type === 'video' ? fmtDuration(item.duration) : null;
-    case 'totalPoints': return item.type === 'video' ? (item.totalPoints ?? '—') : null;
+    case 'totalPoints': return (item.type === 'video' || item.type === 'track') ? (item.totalPoints ?? '—') : null;
     case 'year':        return item.startDate ? String(new Date(item.startDate).getFullYear()) : null;
-    case 'zones':       return item.type === 'pass' ? null : (getItemZones(item).map(r => r.name).join(', ') || null);
+    case 'zones':       return (item.type === 'pass' || item.type === 'track') ? null : (getItemZones(item).map(r => r.name).join(', ') || null);
     default:            return item[key] || '—';
   }
 }
@@ -97,8 +97,12 @@ export default function TableView({
   const [typeFilter, setTypeFilter] = useState('all'); // all | video | photo | pass | nogps
 
   useEffect(() => {
-    Promise.all([fetchAllMedia(), fetchAllPassWaypoints()])
-      .then(([media, waypoints]) => {
+    Promise.all([
+      fetchAllMedia(),
+      fetchAllPassWaypoints().catch(() => []),
+      fetchRecordedTracks().catch(() => []),
+    ])
+      .then(([media, waypoints, tracks]) => {
         const passes = waypoints.map(w => ({
           id: `pass__${w.source}__${w.name}`,
           filename: w.name,
@@ -109,7 +113,19 @@ export default function TableView({
           noGps: false,
           hasThumbnail: false,
         }));
-        setItems([...media, ...passes]);
+        const recordedTracks = tracks.map(t => ({
+          id: `track__${t.id}`,
+          filename: t.name,
+          subfolder: null,
+          type: 'track',
+          startDate: t.date || null,
+          startPoint: t.coordinates.length > 0 ? t.coordinates[0] : null,
+          endPoint: t.coordinates.length > 1 ? t.coordinates[t.coordinates.length - 1] : null,
+          totalPoints: t.coordinates.length,
+          noGps: false,
+          hasThumbnail: false,
+        }));
+        setItems([...media, ...passes, ...recordedTracks]);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -153,20 +169,18 @@ export default function TableView({
       if (typeFilter === 'video' && item.type !== 'video') return false;
       if (typeFilter === 'photo' && item.type !== 'photo') return false;
       if (typeFilter === 'pass' && item.type !== 'pass') return false;
+      if (typeFilter === 'track' && item.type !== 'track') return false;
       if (typeFilter === 'nogps' && !item.noGps) return false;
       if (item.type === 'pass' && typeFilter !== 'pass' && typeFilter !== 'all') return false;
-      if (activeRegion && !inRegion(item, activeRegion)) return false;
-      if (filterYear) {
-        if (!item.startDate) return false;
-        if (new Date(item.startDate).getFullYear() !== filterYear) return false;
-      }
-      if (filterMonth) {
-        if (!item.startDate) return false;
-        if (new Date(item.startDate).getMonth() + 1 !== filterMonth) return false;
-      }
-      if (filterDay) {
-        if (!item.startDate) return false;
-        if (new Date(item.startDate).getDate() !== filterDay) return false;
+      if (item.type === 'track' && typeFilter !== 'track' && typeFilter !== 'all') return false;
+      // Date and region filters only apply to items that actually have coordinates/dates
+      if (item.startDate) {
+        if (activeRegion && !inRegion(item, activeRegion)) return false;
+        if (filterYear && new Date(item.startDate).getFullYear() !== filterYear) return false;
+        if (filterMonth && new Date(item.startDate).getMonth() + 1 !== filterMonth) return false;
+        if (filterDay && new Date(item.startDate).getDate() !== filterDay) return false;
+      } else if (item.startPoint) {
+        if (activeRegion && !inRegion(item, activeRegion)) return false;
       }
       return true;
     });
@@ -181,10 +195,11 @@ export default function TableView({
   });
 
   const counts = {
-    all: items.filter(i => !i.noGps || i.type === 'pass').length,
+    all: items.length,
     video: items.filter(i => i.type === 'video').length,
     photo: items.filter(i => i.type === 'photo').length,
     pass: items.filter(i => i.type === 'pass').length,
+    track: items.filter(i => i.type === 'track').length,
     nogps: items.filter(i => i.noGps).length,
   };
 
@@ -193,6 +208,7 @@ export default function TableView({
     { key: 'video', label: 'Videos' },
     { key: 'photo', label: 'Photos' },
     { key: 'pass',  label: 'Passes' },
+    { key: 'track', label: 'Tracks' },
     { key: 'nogps', label: 'No GPS' },
   ];
 
@@ -329,7 +345,7 @@ export default function TableView({
               {sorted.map(item => (
                 <tr
                   key={item.id}
-                  className={item.type === 'pass' ? 'row--pass' : item.noGps ? 'row--nogps' : ''}
+                  className={item.type === 'pass' ? 'row--pass' : item.type === 'track' ? 'row--track' : item.noGps ? 'row--nogps' : ''}
                   onClick={() => !item.noGps && item.type !== 'pass' && onSelectItem && onSelectItem(item)}
                   style={{ cursor: (item.noGps || item.type === 'pass') ? 'default' : 'pointer' }}
                 >

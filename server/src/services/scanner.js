@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import config from '../config.js';
 
-const VIDEO_EXTS = /\.(mp4|mov)$/i;
+const VIDEO_EXTS = /\.(mp4|mov|ts)$/i;
 const PHOTO_EXTS = /\.(jpg|jpeg|png|heic)$/i;
 
 // Max concurrent readdir calls — keeps network share from being overwhelmed

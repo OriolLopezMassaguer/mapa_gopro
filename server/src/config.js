@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = process.env.DOTENV_PATH || path.resolve(__dirname, '../../.env');
 dotenv.config({ path: envPath });
+// .env.local overrides .env (same convention as Vite/Next.js), never committed
+dotenv.config({ path: path.resolve(__dirname, '../../.env.local'), override: true });
 
 const excludeFile = path.resolve(__dirname, '../../scanner-exclude.json');
 const excludedDirs = fs.existsSync(excludeFile)
@@ -29,6 +31,7 @@ export default {
   metadataDir: path.join(cacheDir, 'metadata'),
   thumbnailDir: path.join(cacheDir, 'thumbnails'),
   passesDir: path.resolve(__dirname, '../../passes'),
+  tracksGrabadosDir: path.resolve(__dirname, '../../tracks_grabados'),
   excludedDirs,
   excludePhotoPrefixes,
   ffmpegPath: process.env.FFMPEG_PATH || null,

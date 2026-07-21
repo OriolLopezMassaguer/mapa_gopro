@@ -9,7 +9,9 @@
     "dev:client": "npm run dev --prefix client",
     "electron:dev": "concurrently \"npm run dev:client\" \"electron .\"",
     "electron:build": "node scripts/prepare-build.mjs && npm run build --prefix client && npm ci --omit=dev --prefix server && electron-builder",
-    "electron:pack": "node scripts/prepare-build.mjs && npm run build --prefix client && electron-builder --dir"
+    "electron:pack": "node scripts/prepare-build.mjs && npm run build --prefix client && electron-builder --dir",
+    "clear-cache": "node scripts/clear-cache.mjs",
+    "export-gpx": "node scripts/export-gpx.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",

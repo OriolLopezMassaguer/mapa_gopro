@@ -3,3 +3,6 @@ dist/
 server/cache-data/
 .env
 *.log
+certs/*
+dist-electron/*
+build-resources/*

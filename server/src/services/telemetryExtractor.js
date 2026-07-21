@@ -221,10 +221,76 @@ function extractGpmfChunked(filePath) {
   });
 }
 
+// Matches: Viidure2026/07/18 06:19:31 N:47.239130 E:9.597292 5.3 km/h 5.25 589.20 10 x:...
+const VIIDURE_RE = /Viidure(\d{4}\/\d{2}\/\d{2}) (\d{2}:\d{2}:\d{2}) ([NS]):([-\d.]+) ([EW]):([-\d.]+) ([\d.]+) km\/h ([\d.]+) ([\d.]+) (\d+)/;
+
+/**
+ * Extract GPS telemetry from an Innov N2 (Viidure) dashcam .ts file.
+ * GPS is stored as plain text in a private PES stream (stream_id 0xBF).
+ * Format: Viidure{date} {time} N:{lat} E:{lon} {speed_kmh} km/h {speed2} {alt} {sats} x:{ax} y:{ay} z:{az}
+ */
+async function extractTsDashcamTelemetry(filePath) {
+  const buf = await fs.promises.readFile(filePath);
+  const samples = [];
+
+  for (let i = 0; i < buf.length - 188; i += 188) {
+    if (buf[i] !== 0x47) continue;              // TS sync byte
+    if (!(buf[i + 1] & 0x40)) continue;         // payload_unit_start_indicator
+    const adaptField = (buf[i + 3] & 0x30) >> 4;
+    let offset = 4;
+    if (adaptField === 2 || adaptField === 3) offset += buf[i + 4] + 1;
+    // Require PES start code + private_stream_2 (0xBF)
+    if (buf[i + offset] !== 0x00 || buf[i + offset + 1] !== 0x00 || buf[i + offset + 2] !== 0x01) continue;
+    if (buf[i + offset + 3] !== 0xBF) continue;
+
+    const text = buf.slice(i + offset + 6, i + 188).toString('latin1');
+    if (!text.startsWith('Viidure')) continue;
+
+    const m = VIIDURE_RE.exec(text);
+    if (!m) continue;
+
+    const [, dateStr, timeStr, latHemi, latStr, lonHemi, lonStr, speedKmh, speed2, altStr, sats] = m;
+    let lat = parseFloat(latStr);
+    let lon = parseFloat(lonStr);
+    if (latHemi === 'S') lat = -Math.abs(lat);
+    if (lonHemi === 'W') lon = -Math.abs(lon);
+
+    if (lat === 0 && lon === 0) continue; // no GPS lock
+
+    const date = new Date(dateStr.replace(/\//g, '-') + 'T' + timeStr + 'Z');
+    samples.push({
+      lat,
+      lon,
+      alt: parseFloat(altStr),
+      speed2d: parseFloat(speedKmh) / 3.6,
+      speed3d: parseFloat(speed2) / 3.6,
+      date,
+      dateMs: date.getTime(),
+    });
+  }
+
+  if (samples.length === 0) return null;
+
+  const startMs = samples[0].dateMs;
+  const coordinates = samples.map(s => ({ ...s, cts: s.dateMs - startMs }));
+  const filtered = filterGpsOutliers(coordinates);
+  if (filtered.length === 0) return null;
+
+  return {
+    startPoint: { lat: filtered[0].lat, lon: filtered[0].lon },
+    endPoint: { lat: filtered[filtered.length - 1].lat, lon: filtered[filtered.length - 1].lon },
+    coordinates: filtered,
+    duration: filtered[filtered.length - 1].cts,
+    totalPoints: filtered.length,
+    startDate: filtered[0].date,
+  };
+}
+
 /**
  * Extract GPS telemetry from a GoPro video (GPMF format).
  */
 export async function extractVideoTelemetry(filePath) {
+  if (/\.ts$/i.test(filePath)) return extractTsDashcamTelemetry(filePath);
   const stat = fs.statSync(filePath);
   let extracted;
 

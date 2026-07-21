@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import config from './config.js';
 import mediaRoutes from './routes/videos.js';
 import passesRoutes from './routes/passes.js';
+import recordedTracksRoutes from './routes/recordedTracks.js';
 import { loadCache, processNewFiles, generateMissingThumbnails } from './services/cacheManager.js';
 
 // Prevent process crashes from killing the server
@@ -23,6 +24,7 @@ app.use(express.json());
 
 app.use('/api/media', mediaRoutes);
 app.use('/api/passes', passesRoutes);
+app.use('/api/recorded-tracks', recordedTracksRoutes);
 
 // In production, serve the built React app
 if (process.env.NODE_ENV === 'production') {

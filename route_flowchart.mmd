@@ -1,0 +1,20 @@
+flowchart TD
+    BCN["Barcelona<br/>Sep 11 Thu · dep ~08:00"]
+    GVA["Geneva<br/>Sep 11-12 · arr ~13:30"]
+    MTX["Montreux<br/>Sep 13 Sat · arr ~09:30"]
+    LUZ["Luzern<br/>Sep 13-15"]
+    BRN["Bern<br/>Sep 15-16"]
+    LUG["Lugano<br/>Sep 16 Tue · arr ~14:30"]
+    MIL["Milan<br/>Sep 16 · arr ~15:30"]
+    TRN["Torino<br/>Sep 17 Wed · arr ~10:00"]
+    BCN2["Barcelona<br/>Sep 18 Thu · arr ~17:00"]
+
+    BCN  -->|"TGV · 5.5h"| GVA
+    GVA  -->|"Regional · 1h"| MTX
+    MTX  -->|"GoldenPass scenic · 5h"| LUZ
+    LUZ  -->|"Regional · 1h"| BRN
+    BRN  -->|"Regional · 1h"| LUZ
+    LUZ  -->|"Gotthard Panorama scenic · 5.5h"| LUG
+    LUG  -->|"Regional · 1h"| MIL
+    MIL  -->|"Regional · 1h"| TRN
+    TRN  -->|"Via Lyon · ~8h"| BCN2

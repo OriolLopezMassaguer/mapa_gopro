@@ -16,3 +16,4 @@ export const fetchAudit = () => api.get('/media/audit').then(r => r.data);
 export const fetchPassFiles = () => api.get('/passes').then(r => r.data);
 export const fetchPassWaypoints = (id) => api.get(`/passes/${id}`).then(r => r.data);
 export const fetchAllPassWaypoints = () => api.get('/passes/all').then(r => r.data);
+export const fetchRecordedTracks = () => api.get('/recorded-tracks').then(r => r.data);

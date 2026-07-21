@@ -1,4 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Rectangle, Tooltip, useMap } from 'react-leaflet';
+import { Fragment } from 'react';
 import L from 'leaflet';
 import { useEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
@@ -36,7 +37,7 @@ function createVideoIcon(color, isSelected) {
     popupAnchor: [0, -(s + 14)],
     html: `<svg width="${s}" height="${s + 12}" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 1C6.477 1 2 5.477 2 11c0 7.5 10 23 10 23s10-15.5 10-23C22 5.477 17.523 1 12 1z" fill="${color}" stroke="${stroke}" stroke-width="${sw}"/>
-      <circle cx="12" cy="11" r="4.5" fill="white" fill-opacity="0.55"/>
+      <polygon points="9,7 18,11 9,15" fill="white" fill-opacity="0.9"/>
     </svg>`,
   });
 }
@@ -55,16 +56,17 @@ function createPhotoIcon(color, isSelected) {
 }
 
 function createVideoEndIcon(color, isSelected) {
-  const op = isSelected ? 1 : 0.85;
-  const sw = isSelected ? 3 : 2.5;
+  const s = isSelected ? 26 : 22;
+  const stroke = isSelected ? 'white' : 'rgba(255,255,255,0.85)';
+  const sw = isSelected ? 2.5 : 1.5;
   return new L.DivIcon({
     className: '',
-    iconSize: [16, 22],
-    iconAnchor: [3, 21],
-    popupAnchor: [7, -22],
-    html: `<svg width="16" height="22" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg">
-      <line x1="3" y1="1" x2="3" y2="21" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" opacity="${op}"/>
-      <path d="M3 2 L14 6 L3 13 Z" fill="${color}" stroke="white" stroke-width="1.5" stroke-linejoin="round" opacity="${op}"/>
+    iconSize: [s, s],
+    iconAnchor: [s / 2, s / 2],
+    popupAnchor: [0, -(s / 2 + 4)],
+    html: `<svg width="${s}" height="${s}" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="20" height="20" rx="4" fill="${color}" stroke="${stroke}" stroke-width="${sw}"/>
+      <rect x="6" y="6" width="10" height="10" rx="1.5" fill="white" fill-opacity="0.9"/>
     </svg>`,
   });
 }
@@ -90,7 +92,7 @@ function createPassIcon() {
 
 const PASS_ICON = createPassIcon();
 
-function FitBounds({ track, selectedItem, mediaItems, passWaypoints }) {
+function FitBounds({ track, selectedItem, mediaItems, passWaypoints, recordedTracks, recordedTrackDate }) {
   const map = useMap();
 
   useEffect(() => {
@@ -111,10 +113,17 @@ function FitBounds({ track, selectedItem, mediaItems, passWaypoints }) {
     if (pts.length > 0) map.fitBounds(pts, { padding: [50, 50] });
   }, [mediaItems, passWaypoints, selectedItem, map]);
 
+  // Zoom to recorded tracks when the date filter changes (including "All")
+  useEffect(() => {
+    if (!recordedTracks?.length) return;
+    const pts = recordedTracks.flatMap(t => t.coordinates.map(c => [c.lat, c.lon]));
+    if (pts.length > 0) map.fitBounds(pts, { padding: [40, 40] });
+  }, [recordedTrackDate, recordedTracks, map]);
+
   return null;
 }
 
-export default function MapView({ mediaItems, selectedItem, track, allTracks, onSelectItem, yearColorMap = {}, regions = [], filterRegion = null, passWaypoints = [] }) {
+export default function MapView({ mediaItems, selectedItem, track, allTracks, onSelectItem, yearColorMap = {}, regions = [], filterRegion = null, passWaypoints = [], recordedTracks = [], recordedTrackDate = null }) {
   const defaultCenter = [45.9, 6.9];
 
   // Only show tracks for items currently visible
@@ -134,7 +143,7 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <FitBounds track={track} selectedItem={selectedItem} mediaItems={mediaItems} passWaypoints={passWaypoints} />
+        <FitBounds track={track} selectedItem={selectedItem} mediaItems={mediaItems} passWaypoints={passWaypoints} recordedTracks={recordedTracks} recordedTrackDate={recordedTrackDate} />
 
         {regions.map(r => {
           const isActive = filterRegion === r.id;
@@ -152,6 +161,38 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
           );
         })}
 
+        {(() => {
+          const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          const allSameDay = recordedTrackDate != null;
+          return recordedTracks.map(t => {
+            const positions = t.coordinates.map(c => [c.lat, c.lon]);
+            if (!t.date || positions.length === 0) return null;
+            const d = new Date(t.date);
+            const dateLabel = `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+            const timeLabel = t.date.slice(11, 16);
+            const pinLabel = allSameDay ? timeLabel : dateLabel;
+            return (
+              <Fragment key={`rec-${t.id}`}>
+                <Polyline
+                  positions={positions}
+                  pathOptions={{ color: '#f97316', weight: 3, opacity: 0.75, dashArray: '8 5' }}
+                >
+                  <Tooltip sticky>{dateLabel} {timeLabel}</Tooltip>
+                </Polyline>
+                <Marker
+                  position={positions[0]}
+                  icon={new L.DivIcon({
+                    className: '',
+                    iconSize: [0, 0],
+                    iconAnchor: [0, 8],
+                    html: `<div style="background:#f97316;color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;white-space:nowrap;opacity:0.9;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,0.3)">${pinLabel}</div>`,
+                  })}
+                />
+              </Fragment>
+            );
+          });
+        })()}
+
         {filteredTracks.map(t => {
           const positions = t.coordinates.map(c => [c.lat, c.lon]);
           const isSelected = selectedItem?.id === t.id;
@@ -159,19 +200,17 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
           const color = item ? getColor(item, yearColorMap) : '#2563eb';
           const handleClick = () => { if (item) onSelectItem(item); };
           return (
-            <>
+            <Fragment key={t.id}>
               <Polyline
-                key={t.id}
                 positions={positions}
                 pathOptions={isSelected ? { color: '#e74c3c', weight: 4, opacity: 0.9 } : { color, weight: 2.5, opacity: 0.55 }}
               />
               <Polyline
-                key={`${t.id}-hit`}
                 positions={positions}
                 pathOptions={{ color: '#000', weight: 12, opacity: 0.001 }}
                 eventHandlers={{ click: handleClick }}
               />
-            </>
+            </Fragment>
           );
         })}
 
