@@ -354,9 +354,11 @@ async function runPool(items, fn, concurrency) {
   await Promise.all(workers);
 }
 
-// How many files to process in parallel.
-// Videos each spawn an ffmpeg process, so keep this modest.
+// Photo concurrency — EXIF reads are cheap, so this can be high.
 const CACHE_CONCURRENCY = parseInt(process.env.CACHE_CONCURRENCY, 10) || 4;
+// Video concurrency — each worker loads the mp4box asm.js module into its own V8 heap.
+// Loading it in too many workers simultaneously causes OOM. Keep this at 1–2.
+const VIDEO_CONCURRENCY = parseInt(process.env.VIDEO_CONCURRENCY, 10) || 1;
 
 // Phase 1: load existing cache entries into memory — fast, runs before server is ready.
 export async function loadCache() {
@@ -449,12 +451,17 @@ export async function loadCache() {
 export async function processNewFiles(toProcess) {
   if (toProcess.length === 0) return;
 
-  console.log(`\nBackground cache update: processing ${toProcess.length} new files (concurrency: ${CACHE_CONCURRENCY})…`);
+  const videos = toProcess.filter(f => f.type === 'video');
+  const photos = toProcess.filter(f => f.type === 'photo');
+  const total = toProcess.length;
+
+  console.log(`\nBackground cache update: processing ${total} new files…`);
+  console.log(`  Videos: ${videos.length} (concurrency: ${VIDEO_CONCURRENCY})  Photos: ${photos.length} (concurrency: ${CACHE_CONCURRENCY})`);
+
   let extracted = 0, noGps = 0, errors = 0, done = 0;
 
-  await runPool(toProcess, async (file) => {
-    const idx = ++done;
-    const prefix = `[${idx}/${toProcess.length}]`;
+  const processFile = async (file) => {
+    const prefix = `[${++done}/${total}]`;
     try {
       const result = file.type === 'video'
         ? await processVideo(file, prefix)
@@ -473,7 +480,12 @@ export async function processNewFiles(toProcess) {
       allMediaIndex.set(file.id, entry);
       errors++;
     }
-  }, CACHE_CONCURRENCY);
+  };
+
+  await Promise.all([
+    runPool(videos, processFile, VIDEO_CONCURRENCY),
+    runPool(photos, processFile, CACHE_CONCURRENCY),
+  ]);
 
   console.log(`\nBackground cache update complete:`);
   console.log(`  ${extracted} extracted, ${noGps} no GPS, ${errors} errors`);
