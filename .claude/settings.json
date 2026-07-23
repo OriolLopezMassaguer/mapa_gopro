@@ -56,7 +56,9 @@
       "Bash(cat \"C:\\\\Users\\\\ds02303\\\\AppData\\\\Roaming\\\\Mapa GoPro\\\\logs\\\\startup.log\" 2>/dev/null || echo \"File not found\")",
       "Read(//c/Users/ds02303/AppData/Roaming/Mapa GoPro/logs/**)",
       "Bash(ls -la \"C:\\\\Users\\\\ds02303\\\\AppData\\\\Roaming\\\\Mapa GoPro\\\\\" 2>/dev/null || echo \"Dir not found\")",
-      "Read(//c/Users/ds02303/AppData/Roaming/Mapa GoPro\" 2>/dev/**)"
+      "Read(//c/Users/ds02303/AppData/Roaming/Mapa GoPro\" 2>/dev/**)",
+      "Bash(ls d:/media/ 2>/dev/null || echo \"directory not found\")",
+      "Read(//d/media/**)"
     ]
   }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { fetchAllMedia, fetchAllPassWaypoints, fetchRecordedTracks, getThumbnailUrl } from '../services/api';
+import { fetchAllMedia, fetchAllPassWaypoints, fetchRecordedTracks, getThumbnailUrl, getKmlUrl, getGpxUrl } from '../services/api';
 import { REGIONS, MONTH_NAMES, inRegion } from '../constants';
 
 const COLUMNS = [
@@ -15,6 +15,7 @@ const COLUMNS = [
   { key: 'endPoint',    label: 'GPS End' },
   { key: 'duration',    label: 'Duration' },
   { key: 'totalPoints', label: 'Points' },
+  { key: 'downloads',   label: 'Export', noSort: true },
 ];
 
 function fmtCoord(pt) {
@@ -228,15 +229,12 @@ export default function TableView({
           ))}
         </div>
         <div className="export-btns">
-          <a href="/api/media/export.kml" download="gopro-tracks.kml" className="export-btn">
-            All KML
-          </a>
-          <a href="/api/media/export-videos.kml" download="gopro-video-tracks.kml" className="export-btn export-btn--video">
-            Videos KML
-          </a>
-          <a href="/api/media/export-photos.kml" download="gopro-photos.kml" className="export-btn export-btn--photo">
-            Photos KML
-          </a>
+          <a href="/api/media/export.gpx" download="gopro-tracks.gpx" className="export-btn export-btn--gpx">All GPX</a>
+          <a href="/api/media/export.kml" download="gopro-tracks.kml" className="export-btn">All KML</a>
+          <a href="/api/media/export.gpx?type=video" download="gopro-video-tracks.gpx" className="export-btn export-btn--video">Videos GPX</a>
+          <a href="/api/media/export-videos.kml" download="gopro-video-tracks.kml" className="export-btn export-btn--video">Videos KML</a>
+          <a href="/api/media/export.gpx?type=photo" download="gopro-photos.gpx" className="export-btn export-btn--photo">Photos GPX</a>
+          <a href="/api/media/export-photos.kml" download="gopro-photos.kml" className="export-btn export-btn--photo">Photos KML</a>
         </div>
       </div>
 
@@ -330,11 +328,12 @@ export default function TableView({
                 {COLUMNS.map(col => (
                   <th
                     key={col.key}
-                    onClick={() => handleSort(col.key)}
+                    onClick={col.noSort ? undefined : () => handleSort(col.key)}
                     className={sortKey === col.key ? 'sorted' : ''}
+                    style={col.noSort ? { cursor: 'default' } : {}}
                   >
                     {col.label}
-                    {sortKey === col.key && (
+                    {!col.noSort && sortKey === col.key && (
                       <span className="sort-arrow">{sortAsc ? ' ↑' : ' ↓'}</span>
                     )}
                   </th>
@@ -370,6 +369,19 @@ export default function TableView({
                               <span key={r.id} className="zone-tag">{r.name}</span>
                             ))
                           }
+                        </td>
+                      );
+                    }
+                    if (col.key === 'downloads') {
+                      const hasGps = !item.noGps && item.startPoint && (item.type === 'video' || item.type === 'photo');
+                      return (
+                        <td key="downloads" onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          {hasGps ? (
+                            <>
+                              <a href={getGpxUrl(item.id)} download className="row-export-btn">GPX</a>
+                              <a href={getKmlUrl(item.id)} download className="row-export-btn">KML</a>
+                            </>
+                          ) : <span className="na">—</span>}
                         </td>
                       );
                     }

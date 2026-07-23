@@ -283,10 +283,26 @@
 }
 
 .export-btn:hover { background: #15803d; }
+.export-btn--gpx { background: #7c3aed; }
+.export-btn--gpx:hover { background: #6d28d9; }
 .export-btn--video { background: #2563eb; }
 .export-btn--video:hover { background: #1d4ed8; }
 .export-btn--photo { background: #d97706; }
 .export-btn--photo:hover { background: #b45309; }
+
+.row-export-btn {
+  display: inline-block;
+  padding: 2px 7px;
+  margin-right: 4px;
+  background: #374151;
+  color: #e5e7eb;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.row-export-btn:hover { background: #4b5563; }
 
 .table-filters {
   display: flex;

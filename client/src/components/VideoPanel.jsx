@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import VideoPlayer from './VideoPlayer';
-import { getThumbnailUrl, getStreamUrl, getKmlUrl, recheckMedia } from '../services/api';
+import { getThumbnailUrl, getStreamUrl, getKmlUrl, getGpxUrl, recheckMedia } from '../services/api';
 
 
 function formatDuration(ms) {
@@ -41,15 +41,26 @@ export default function MediaPanel({ item, track, trackLoading, onClose, onReche
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {!item.noGps && (
-            <a
-              href={getKmlUrl(item.id)}
-              download
-              className="panel-download-btn"
-              title="Download KML"
-              style={{ fontSize: 12, fontWeight: 700 }}
-            >
-              KML
-            </a>
+            <>
+              <a
+                href={getGpxUrl(item.id)}
+                download
+                className="panel-download-btn"
+                title="Download GPX"
+                style={{ fontSize: 12, fontWeight: 700 }}
+              >
+                GPX
+              </a>
+              <a
+                href={getKmlUrl(item.id)}
+                download
+                className="panel-download-btn"
+                title="Download KML"
+                style={{ fontSize: 12, fontWeight: 700 }}
+              >
+                KML
+              </a>
+            </>
           )}
           {isVideo && (
             <a

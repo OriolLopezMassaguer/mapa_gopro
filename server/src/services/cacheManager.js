@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import config from '../config.js';
 import { scanMediaDirectory } from './scanner.js';
 import { generateThumbnail } from './thumbnailGenerator.js';
+import { generateKml } from './kmlExporter.js';
+import { writeGpxFile, deleteGpxFile } from './gpxExporter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORKER_PATH = path.join(__dirname, 'extractionWorker.js');
@@ -27,8 +29,25 @@ function invalidate() {
   allTracksDirty = true;
 }
 
+function writeExportFiles(entry) {
+  try { writeGpxFile(entry); } catch { }
+  try {
+    if (!fs.existsSync(config.kmlDir)) fs.mkdirSync(config.kmlDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(config.kmlDir, `${entry.id}.kml`),
+      generateKml([entry]),
+      'utf-8'
+    );
+  } catch { }
+}
+
+function deleteExportFiles(id) {
+  deleteGpxFile(id);
+  try { fs.unlinkSync(path.join(config.kmlDir, `${id}.kml`)); } catch { }
+}
+
 function ensureDirs() {
-  for (const dir of [config.cacheDir, config.metadataDir, config.thumbnailDir]) {
+  for (const dir of [config.cacheDir, config.metadataDir, config.thumbnailDir, config.gpxDir, config.kmlDir]) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -176,6 +195,7 @@ function deleteCache(id) {
   for (const [key, val] of fingerprintIndex) {
     if (val.id === id) { fingerprintIndex.delete(key); break; }
   }
+  deleteExportFiles(id);
   if (!batchMode) { saveCacheIndex(); saveFingerprintIndex(); }
 }
 
@@ -241,6 +261,7 @@ async function processVideo(file, prefix) {
       ...telemetry,
     };
     writeCache(file.id, entry);
+    writeExportFiles(entry);
     mediaIndex.set(file.id, readCache(file.id));
     allMediaIndex.set(file.id, entry);
 
@@ -291,6 +312,7 @@ async function processPhoto(file, prefix) {
       ...gps,
     };
     writeCache(file.id, entry);
+    writeExportFiles(entry);
     mediaIndex.set(file.id, entry);
     allMediaIndex.set(file.id, entry);
     invalidate();
@@ -618,6 +640,18 @@ export async function auditCache() {
     totalMissing: missing.length,
     missing,
   };
+}
+
+export function getFullMediaEntry(id) {
+  const entry = allMediaIndex.get(id);
+  if (!entry || entry.noGps) return null;
+  if (entry.type === 'video') {
+    try {
+      const full = JSON.parse(fs.readFileSync(getCachePath(id), 'utf-8'));
+      return { ...entry, coordinates: full.coordinates ?? null };
+    } catch { return null; }
+  }
+  return entry;
 }
 
 export function getMediaFilePath(id) {

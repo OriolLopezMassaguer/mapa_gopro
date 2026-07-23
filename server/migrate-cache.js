@@ -1,7 +1,7 @@
 /**
  * Cache migration script.
  *
- * Scans the new DATA_DIR, matches files to existing cache entries by
+ * Scans DATA_DIR/video_cache, matches files to existing cache entries by
  * (filename + fileSize + lastModified), then rewrites cache JSON files and
  * thumbnails with the new IDs/paths — no GPS re-extraction needed.
  *
@@ -18,7 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const DATA_DIR   = process.env.DATA_DIR || '\\\\babel\\Alpes';
-const CACHE_DIR   = path.resolve(__dirname, 'cache-data');
+const CACHE_DIR   = path.join(DATA_DIR, 'video_cache');
 const META_DIR    = path.join(CACHE_DIR, 'metadata');
 const THUMB_DIR   = path.join(CACHE_DIR, 'thumbnails');
 

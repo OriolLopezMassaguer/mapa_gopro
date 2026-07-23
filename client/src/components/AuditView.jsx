@@ -64,6 +64,10 @@ export default function AuditView() {
             </button>
           ))}
         </div>
+        <div className="export-btns">
+          <a href="/api/media/export.gpx" download="gopro-tracks.gpx" className="export-btn export-btn--gpx">All GPX</a>
+          <a href="/api/media/export.kml" download="gopro-tracks.kml" className="export-btn">All KML</a>
+        </div>
       </div>
 
       {error && <div className="error-banner">Error: {error}</div>}
