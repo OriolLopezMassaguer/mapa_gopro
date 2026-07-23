@@ -62,7 +62,11 @@
       "Bash(ls \"C:\\\\Users\\\\ds02303\\\\.claude\\\\projects\\\\d--mapa-gopro\\\\memory\\\\\" 2>/dev/null || echo \"EMPTY\")",
       "Read(//c/Users/ds02303/.claude/projects/d--mapa-gopro/memory\" 2>/dev/**)",
       "Bash(ls C:/Users/ds02303/.claude/projects/d--mapa-gopro/memory/ 2>/dev/null || echo EMPTY)",
-      "Read(//c/Users/ds02303/.claude/projects/d--mapa-gopro/memory/**)"
+      "Read(//c/Users/ds02303/.claude/projects/d--mapa-gopro/memory/**)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 19612 /F)",
+      "Bash(cmd /c \"taskkill /PID 19612 /F\")",
+      "Bash(powershell -Command \"Stop-Process -Id 19612 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; \\(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\\) | Select-Object -ExpandProperty OwningProcess\")"
     ]
   }
 }
