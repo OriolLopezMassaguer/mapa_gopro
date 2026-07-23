@@ -6,7 +6,7 @@ import exifr from 'exifr';
 
 const require = createRequire(import.meta.url);
 
-const CHUNKED_THRESHOLD = 500 * 1024 * 1024; // 500 MB — use chunked reading for large files
+const CHUNKED_THRESHOLD = 0; // always use chunked reading — avoids loading the full video file into memory
 const IMPOSSIBLE_SPEED_MS = 200; // m/s = 720 km/h — impossible for any ground/air GoPro use
 const SPIKE_SPEED_MS = 100;      // m/s = 360 km/h — bilateral threshold for single-point spike removal
 

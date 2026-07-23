@@ -65,6 +65,7 @@ app.listen(PORT, async () => {
   console.log(`  READY — http://localhost:${PORT}  (${elapsed()})`);
   if (toProcess.length > 0)
     console.log(`  ${toProcess.length} new files queued for background processing`);
+  console.log('  Thumbnail check will run after processing');
   console.log('========================================');
   console.log('');
 

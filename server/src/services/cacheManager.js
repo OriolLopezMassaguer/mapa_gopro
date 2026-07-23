@@ -231,8 +231,7 @@ function runInWorker(file, timeoutMs) {
 
 async function processVideo(file, prefix) {
   const sizeGb = (file.fileSize / 1e9).toFixed(2);
-  // Fixed 10-minute timeout per file (network share needs generous headroom)
-  const timeoutMs = 600_000;
+  const timeoutMs = (parseInt(process.env.EXTRACTION_TIMEOUT, 10) || 1000) * 1000;
   console.log(`${prefix} Extracting GPS from video: ${file.relativePath} (${sizeGb} GB, timeout: ${timeoutMs / 1000}s)`);
 
   const startMs = Date.now();
@@ -289,6 +288,12 @@ async function processVideo(file, prefix) {
     };
     writeCache(file.id, entry);
     allMediaIndex.set(file.id, entry);
+    try {
+      await generateThumbnail(file.filepath, file.id);
+      thumbnailSet.add(file.id);
+    } catch (err) {
+      console.log(`  Thumbnail failed: ${err.message}${err.stderr ? '\n' + err.stderr : ''}`);
+    }
     console.log(`  -> No GPS data`);
     return 'noGps';
   }
@@ -477,9 +482,12 @@ export async function processNewFiles(toProcess) {
 
 export async function generateMissingThumbnails() {
   const missing = Array.from(allMediaIndex.values()).filter(
-    e => e.type === 'video' && !e.noGps && !thumbnailSet.has(e.id)
+    e => e.type === 'video' && !thumbnailSet.has(e.id)
   );
-  if (missing.length === 0) return;
+  if (missing.length === 0) {
+    console.log(`Thumbnail check: all ${thumbnailSet.size} thumbnails present`);
+    return;
+  }
   console.log(`\nThumbnail backfill: ${missing.length} videos missing thumbnails…`);
   let done = 0, failed = 0;
   await runPool(missing, async (entry) => {
@@ -488,7 +496,9 @@ export async function generateMissingThumbnails() {
       thumbnailSet.add(entry.id);
       invalidate();
       done++;
-    } catch {
+      console.log(`  [${done + failed}/${missing.length}] Generated: ${entry.filename}`);
+    } catch (err) {
+      console.log(`  [${done + failed}/${missing.length}] Failed: ${entry.filename} — ${err.message}`);
       failed++;
     }
   }, CACHE_CONCURRENCY);
