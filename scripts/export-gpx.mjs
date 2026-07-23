@@ -1,5 +1,5 @@
 /**
- * Scans VIDEO_DIR for all videos, extracts GPS telemetry, and writes one GPX
+ * Scans DATA_DIR for all videos, extracts GPS telemetry, and writes one GPX
  * file per video into a tracks-videos/ folder.
  * Usage: node scripts/export-gpx.mjs [output-dir]
  * Output defaults to ./tracks-videos/
@@ -17,14 +17,13 @@ const root = path.resolve(__dirname, '..');
 dotenv.config({ path: path.join(root, '.env') });
 dotenv.config({ path: path.join(root, '.env.local'), override: true });
 
-const videoDir  = process.env.VIDEO_DIR;
-const mediaSubdir = process.env.MEDIA_SUBDIR || 'media';
-if (!videoDir) {
-  console.error('VIDEO_DIR is not set. Create a .env.local file with VIDEO_DIR=<path>');
+const dataDir  = process.env.DATA_DIR;
+if (!dataDir) {
+  console.error('DATA_DIR is not set. Create a .env.local file with DATA_DIR=<path>');
   process.exit(1);
 }
 
-const mediaDir  = path.join(videoDir, mediaSubdir);
+const mediaDir  = path.join(dataDir, 'media');
 const outputDir = process.argv[2] || path.join(root, 'tracks-videos');
 const VIDEO_EXTS = /\.(mp4|mov|ts)$/i;
 

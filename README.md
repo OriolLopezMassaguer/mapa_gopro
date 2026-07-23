@@ -31,16 +31,14 @@ Local web app for visualizing GoPro footage and photos on an interactive map. It
    npm install          # root (installs both client and server)
    ```
 
-2. Configure the media directory by creating a `.env.local` file in `server/`:
+2. Configure the data directory by creating a `.env.local` file at the repository root:
    ```bash
    # Windows NAS share
-   VIDEO_DIR=\\Babel\GoPro
-   MEDIA_SUBDIR=media
+   DATA_DIR=\\Babel\GoPro
    ```
    Or for Linux/Synology:
    ```bash
-   VIDEO_DIR=/volume1/GoPro
-   MEDIA_SUBDIR=media
+   DATA_DIR=/volume1/GoPro
    ```
 
 3. Start both server and client:
@@ -81,7 +79,8 @@ mapa_gopro/
     src/
       routes/      API route handlers
       services/    GPS extraction, thumbnail generation, caching
-  passes/          43 GPX files with mountain pass waypoints
+  passes/          GPX files with mountain pass waypoints (by region)
+  tracks/          Recorded BMW Motorrad GPS tracks
   scripts/         Utility and launcher scripts
     start.ps1        Windows launcher (opens server + client in separate windows)
     start-babel.sh   Linux/Synology launcher

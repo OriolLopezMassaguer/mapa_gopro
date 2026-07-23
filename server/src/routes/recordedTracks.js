@@ -7,7 +7,7 @@ const router = Router();
 
 function listGpxFiles() {
   try {
-    return fs.readdirSync(config.tracksGrabadosDir)
+    return fs.readdirSync(config.tracksDir)
       .filter(f => f.toLowerCase().endsWith('.gpx'))
       .sort();
   } catch {
@@ -46,7 +46,7 @@ router.get('/', (req, res) => {
   const files = listGpxFiles();
   const result = [];
   for (const filename of files) {
-    const filepath = path.join(config.tracksGrabadosDir, filename);
+    const filepath = path.join(config.tracksDir, filename);
     try {
       const content = fs.readFileSync(filepath, 'utf-8');
       const points = parseTrackPoints(content);

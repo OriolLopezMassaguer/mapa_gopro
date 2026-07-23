@@ -1,7 +1,7 @@
 /**
  * Cache migration script.
  *
- * Scans the new VIDEO_DIR, matches files to existing cache entries by
+ * Scans the new DATA_DIR, matches files to existing cache entries by
  * (filename + fileSize + lastModified), then rewrites cache JSON files and
  * thumbnails with the new IDs/paths — no GPS re-extraction needed.
  *
@@ -17,7 +17,7 @@ import dotenv from 'dotenv';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const VIDEO_DIR   = process.env.VIDEO_DIR || '\\\\babel\\Alpes';
+const DATA_DIR   = process.env.DATA_DIR || '\\\\babel\\Alpes';
 const CACHE_DIR   = path.resolve(__dirname, 'cache-data');
 const META_DIR    = path.join(CACHE_DIR, 'metadata');
 const THUMB_DIR   = path.join(CACHE_DIR, 'thumbnails');
@@ -44,7 +44,7 @@ function scanRecursive(dir, results) {
     const isPhoto = PHOTO_EXTS.test(entry);
     if (!isVideo && !isPhoto) continue;
 
-    const relPath = path.relative(VIDEO_DIR, filepath);
+    const relPath = path.relative(DATA_DIR, filepath);
     const id = relPath.replace(/[\\/]/g, '_').replace(/\.[^.]+$/, '');
 
     results.push({
@@ -89,9 +89,9 @@ function makeKey(filename, fileSize, lastModified) {
 
 // ── main ─────────────────────────────────────────────────────────────────────
 
-console.log(`Scanning: ${VIDEO_DIR}`);
+console.log(`Scanning: ${DATA_DIR}`);
 const newFiles = [];
-scanRecursive(VIDEO_DIR, newFiles);
+scanRecursive(DATA_DIR, newFiles);
 console.log(`Found ${newFiles.length} media files\n`);
 
 console.log(`Loading existing cache from: ${META_DIR}`);

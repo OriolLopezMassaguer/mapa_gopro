@@ -14,13 +14,13 @@ const root = path.resolve(__dirname, '..');
 dotenv.config({ path: path.join(root, '.env') });
 dotenv.config({ path: path.join(root, '.env.local'), override: true });
 
-const videoDir = process.env.VIDEO_DIR;
-if (!videoDir) {
-  console.error('VIDEO_DIR is not set. Create a .env.local file with VIDEO_DIR=<path>');
+const dataDir = process.env.DATA_DIR;
+if (!dataDir) {
+  console.error('DATA_DIR is not set. Create a .env.local file with DATA_DIR=<path>');
   process.exit(1);
 }
 
-const cacheDir = path.join(videoDir, 'video_cache');
+const cacheDir = path.join(dataDir, 'video_cache');
 
 if (!fs.existsSync(cacheDir)) {
   console.log('Cache directory does not exist:', cacheDir);

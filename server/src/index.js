@@ -46,7 +46,7 @@ app.listen(PORT, async () => {
   console.log('  mapa_gopro server starting');
   console.log('========================================');
   console.log(`  Port        : ${PORT}`);
-  console.log(`  Video dir   : ${config.videoDir}`);
+  console.log(`  Data dir    : ${config.dataDir}`);
   console.log(`  Media dir   : ${config.mediaDir}`);
   console.log(`  Cache dir   : ${config.cacheDir}`);
   console.log(`  Concurrency : ${process.env.CACHE_CONCURRENCY || 4}`);

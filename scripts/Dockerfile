@@ -18,13 +18,11 @@ RUN npm ci --omit=dev --prefix server
 
 # Application files
 COPY server/       ./server/
-COPY passes/       ./passes/
 COPY scanner-exclude.json ./
 COPY --from=client-builder /app/client/dist ./client/dist
 
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV MEDIA_SUBDIR=media
 
 EXPOSE 3001
 

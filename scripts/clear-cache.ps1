@@ -12,13 +12,13 @@ foreach ($envFile in @("$root\.env", "$root\.env.local")) {
     }
 }
 
-$videoDir = [System.Environment]::GetEnvironmentVariable("VIDEO_DIR")
-if (-not $videoDir) {
-    Write-Error "VIDEO_DIR is not set. Create a .env.local file with VIDEO_DIR=<path>"
+$dataDir = [System.Environment]::GetEnvironmentVariable("DATA_DIR")
+if (-not $dataDir) {
+    Write-Error "DATA_DIR is not set. Create a .env.local file with DATA_DIR=<path>"
     exit 1
 }
 
-$cacheDir = Join-Path $videoDir "video_cache"
+$cacheDir = Join-Path $dataDir "video_cache"
 
 if (-not (Test-Path $cacheDir)) {
     Write-Host "Cache directory does not exist: $cacheDir"

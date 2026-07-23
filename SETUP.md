@@ -56,18 +56,19 @@ copy .env.babel .env
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VIDEO_DIR` | `\\babel\Alpes` | Root directory where GoPro files are stored |
-| `MEDIA_SUBDIR` | `media` | Sub-directory inside `VIDEO_DIR` that contains media files |
+| `DATA_DIR` | `\\babel\Alpes` | Root directory containing all GoPro data |
 | `PORT` | `3001` | HTTP port the server listens on |
 | `EXCLUDE_PHOTO_PREFIXES` | `DSC` | Comma-separated filename prefixes to skip (e.g. non-GoPro photos) |
 | `CACHE_CONCURRENCY` | `4` | Parallel workers for background cache processing |
 | `DOTENV_PATH` | `../../.env` (relative to server/src) | Override path to the `.env` file |
 
-### Directory layout expected under `VIDEO_DIR`
+### Directory layout expected under `DATA_DIR`
 
 ```
-VIDEO_DIR/
-├── media/          ← MEDIA_SUBDIR — photos and videos indexed by the server
+DATA_DIR/
+├── media/          ← photos and videos indexed by the server
+├── passes/         ← GPX files with mountain pass waypoints (by region)
+├── tracks/         ← Recorded GPS tracks
 └── video_cache/    ← created automatically
     ├── metadata/   ← JSON telemetry cache per file
     └── thumbnails/ ← generated thumbnails
@@ -111,7 +112,7 @@ NODE_ENV=production npm run start --prefix server
 
 ## Scanner exclusions
 
-`scanner-exclude.json` at the repository root is a JSON array of directory names (case-insensitive) that the server will skip when scanning `VIDEO_DIR`. Edit it to prevent the indexer from entering irrelevant or slow directories:
+`scanner-exclude.json` at the repository root is a JSON array of directory names (case-insensitive) that the server will skip when scanning `DATA_DIR`. Edit it to prevent the indexer from entering irrelevant or slow directories:
 
 ```json
 ["jdowloader", "mapa_gopro", "scripts", "synoscheduler"]
@@ -121,7 +122,7 @@ NODE_ENV=production npm run start --prefix server
 
 ## Mountain passes (GPX data)
 
-The `passes/` directory contains GPX files with mountain pass waypoints rendered on the map. Each file is named by region. To add a new region, drop a `.gpx` file into that directory — no server restart needed, the passes API reads the directory at request time.
+The `passes/` directory under `DATA_DIR` contains GPX files with mountain pass waypoints rendered on the map. Each file is named by region. To add a new region, drop a `.gpx` file into that directory — no server restart needed, the passes API reads the directory at request time.
 
 ---
 
@@ -137,8 +138,8 @@ The `passes/` directory contains GPX files with mountain pass waypoints rendered
 ## Troubleshooting
 
 **Server starts but no videos appear**
-- Check that `VIDEO_DIR` in `.env` points to the correct path and is accessible.
-- Verify `MEDIA_SUBDIR` matches the actual sub-directory name.
+- Check that `DATA_DIR` in `.env` points to the correct path and is accessible.
+- Verify that a `media/` sub-directory exists inside `DATA_DIR`.
 
 **Thumbnails are not generated**
 - Confirm `ffmpeg` is installed and available on `PATH` (`ffmpeg -version`).
@@ -223,7 +224,7 @@ Runs the full app (server + pre-built client) in a single container. Useful for 
 
 ```bash
 cp .env.docker.example .env
-# Edit .env and set VIDEO_DIR to the path of your GoPro videos on the host
+# Edit .env and set DATA_DIR to the path of your GoPro data on the host
 ```
 
 ### Start
@@ -237,8 +238,7 @@ The app is available at `http://<host>:3001`.
 ### Synology NAS (Babel) example
 
 ```env
-VIDEO_DIR=/volume1/GoPro
-MEDIA_SUBDIR=media
+DATA_DIR=/volume1/GoPro
 ```
 
 ### Rebuild after code changes
@@ -256,5 +256,5 @@ docker compose logs -f
 
 ### Notes
 
-- The video directory is mounted **read-only** (`ro`). The cache (`video_cache/`) is written inside `VIDEO_DIR` on the host, so thumbnails and metadata persist across container restarts.
+- The data directory is mounted **read-only** (`ro`). The cache (`video_cache/`) is written inside `DATA_DIR` on the host, so thumbnails and metadata persist across container restarts.
 - Lower `CACHE_CONCURRENCY` for slow NAS disks (e.g. `CACHE_CONCURRENCY=2` in `.env`).
