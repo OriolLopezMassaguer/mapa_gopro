@@ -93,6 +93,45 @@
   font-size: 14px;
 }
 
+.places-section {
+  padding-top: 12px;
+}
+
+.places-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.places-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.places-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+  gap: 8px;
+}
+
+.places-name {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.places-time {
+  color: #888;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .video-unsupported {
   background: #f8f9fa;
   border: 1px solid #e5e7eb;

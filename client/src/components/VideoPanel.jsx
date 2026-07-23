@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import VideoPlayer from './VideoPlayer';
-import { getThumbnailUrl, getStreamUrl, getKmlUrl, getGpxUrl, recheckMedia } from '../services/api';
+import { getThumbnailUrl, getStreamUrl, getKmlUrl, getGpxUrl, recheckMedia, fetchPlaces, clearPlacesCache } from '../services/api';
 
 
 function formatDuration(ms) {
@@ -11,9 +11,45 @@ function formatDuration(ms) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function formatPlaceTime(isoString) {
+  if (!isoString) return null;
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch {
+    return null;
+  }
+}
+
+function formatPlaceDate(isoString) {
+  if (!isoString) return null;
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
+  } catch {
+    return null;
+  }
+}
+
 export default function MediaPanel({ item, track, trackLoading, onClose, onRecheckDone }) {
   const [recheckLoading, setRecheckLoading] = useState(false);
   const [recheckError, setRecheckError] = useState(null);
+  const [places, setPlaces] = useState(null);
+  const [placesLoading, setPlacesLoading] = useState(false);
+  const [placesError, setPlacesError] = useState(null);
+
+  useEffect(() => {
+    if (item.type !== 'video' || item.noGps) {
+      setPlaces(null);
+      return;
+    }
+    setPlaces(null);
+    setPlacesError(null);
+    setPlacesLoading(true);
+    fetchPlaces(item.id)
+      .then(data => { setPlaces(data); setPlacesLoading(false); })
+      .catch(err => { setPlacesError(err.message || 'Failed to load places'); setPlacesLoading(false); });
+  }, [item.id, item.type, item.noGps]);
 
   async function handleRecheck() {
     setRecheckLoading(true);
@@ -27,6 +63,21 @@ export default function MediaPanel({ item, track, trackLoading, onClose, onReche
       setRecheckLoading(false);
     }
   }
+
+  async function handleRefreshPlaces() {
+    setPlacesLoading(true);
+    setPlacesError(null);
+    try {
+      await clearPlacesCache(item.id);
+      const data = await fetchPlaces(item.id);
+      setPlaces(data);
+    } catch (err) {
+      setPlacesError(err.message || 'Failed to refresh places');
+    } finally {
+      setPlacesLoading(false);
+    }
+  }
+
   const isVideo = item.type === 'video';
   const isPhoto = item.type === 'photo';
 
@@ -147,6 +198,42 @@ export default function MediaPanel({ item, track, trackLoading, onClose, onReche
         {trackLoading && <div className="loading-track">Loading GPS track...</div>}
         {recheckLoading && <div className="loading-track">Re-extracting GPS from source file…</div>}
         {recheckError && <div className="loading-track" style={{ color: '#c00' }}>{recheckError}</div>}
+
+        {isVideo && !item.noGps && (
+          <div className="places-section">
+            <div className="places-header">
+              <span className="info-label">Places visited</span>
+              <button
+                className="panel-download-btn"
+                onClick={handleRefreshPlaces}
+                disabled={placesLoading}
+                title="Re-geocode places from GPS track"
+                style={{ fontSize: 11, cursor: placesLoading ? 'wait' : 'pointer', padding: '2px 6px' }}
+              >
+                {placesLoading ? '…' : '↺'}
+              </button>
+            </div>
+            {placesLoading && <div className="loading-track">Geocoding places…</div>}
+            {placesError && <div className="loading-track" style={{ color: '#c00' }}>{placesError}</div>}
+            {!placesLoading && places && places.length === 0 && (
+              <div className="loading-track" style={{ color: '#888' }}>No places found</div>
+            )}
+            {!placesLoading && places && places.length > 0 && (
+              <ol className="places-list">
+                {places.map((p, i) => (
+                  <li key={i} className="places-item">
+                    <span className="places-name">{p.name}</span>
+                    {p.time && (
+                      <span className="places-time">
+                        {formatPlaceDate(p.time)} {formatPlaceTime(p.time)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

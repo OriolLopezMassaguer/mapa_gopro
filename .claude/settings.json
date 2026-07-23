@@ -58,7 +58,11 @@
       "Bash(ls -la \"C:\\\\Users\\\\ds02303\\\\AppData\\\\Roaming\\\\Mapa GoPro\\\\\" 2>/dev/null || echo \"Dir not found\")",
       "Read(//c/Users/ds02303/AppData/Roaming/Mapa GoPro\" 2>/dev/**)",
       "Bash(ls d:/media/ 2>/dev/null || echo \"directory not found\")",
-      "Read(//d/media/**)"
+      "Read(//d/media/**)",
+      "Bash(ls \"C:\\\\Users\\\\ds02303\\\\.claude\\\\projects\\\\d--mapa-gopro\\\\memory\\\\\" 2>/dev/null || echo \"EMPTY\")",
+      "Read(//c/Users/ds02303/.claude/projects/d--mapa-gopro/memory\" 2>/dev/**)",
+      "Bash(ls C:/Users/ds02303/.claude/projects/d--mapa-gopro/memory/ 2>/dev/null || echo EMPTY)",
+      "Read(//c/Users/ds02303/.claude/projects/d--mapa-gopro/memory/**)"
     ]
   }
 }

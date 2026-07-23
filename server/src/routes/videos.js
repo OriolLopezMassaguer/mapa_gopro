@@ -6,6 +6,7 @@ import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getAllVideoTra
 import { generateKml } from '../services/kmlExporter.js';
 import { writeGpxFile } from '../services/gpxExporter.js';
 import { streamVideo } from '../services/videoStreamer.js';
+import { getPlacesForVideo, deletePlacesCache } from '../services/geocoder.js';
 
 const router = Router();
 
@@ -132,6 +133,26 @@ router.get('/:id/export.gpx', (req, res) => {
     return res.sendFile(cached);
   }
   res.status(500).json({ error: 'GPX generation failed' });
+});
+
+// GET /api/media/:id/places — list of villages/towns visited during a video (reverse-geocoded from GPS track)
+router.get('/:id/places', async (req, res) => {
+  const entry = getFullMediaEntry(req.params.id);
+  if (!entry || entry.type !== 'video' || !entry.coordinates?.length) {
+    return res.json([]);
+  }
+  try {
+    const places = await getPlacesForVideo(req.params.id, entry.coordinates);
+    res.json(places);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/media/:id/places — clear cached places (force re-geocode on next request)
+router.delete('/:id/places', (req, res) => {
+  deletePlacesCache(req.params.id);
+  res.json({ ok: true });
 });
 
 // POST /api/media/:id/recheck — force re-extraction of GPS, bypassing the cache.

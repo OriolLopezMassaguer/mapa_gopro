@@ -32,6 +32,7 @@ export default {
   thumbnailDir: path.join(cacheDir, 'thumbnails'),
   gpxDir: path.join(cacheDir, 'gpx'),
   kmlDir: path.join(cacheDir, 'kml'),
+  placesDir: path.join(cacheDir, 'places'),
   passesDir: path.join(dataDir, 'passes'),
   tracksDir: path.join(dataDir, 'tracks'),
   excludedDirs,
