@@ -224,7 +224,7 @@ function runInWorker(file, timeoutMs) {
     worker.on('error', (err) => { clearTimeout(timer); reject(err); });
     worker.on('exit', (code) => {
       clearTimeout(timer);
-      if (code !== 0) reject(new Error(`Worker exited with code ${code}`));
+      if (code !== 0) reject(new Error(`Worker exited with code ${code} (file: ${file.relativePath})`));
     });
   });
 }

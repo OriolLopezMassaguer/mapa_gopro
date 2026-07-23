@@ -8,12 +8,12 @@ import passesRoutes from './routes/passes.js';
 import recordedTracksRoutes from './routes/recordedTracks.js';
 import { loadCache, processNewFiles, generateMissingThumbnails } from './services/cacheManager.js';
 
-// Prevent process crashes from killing the server
+// Log crashes with full stack traces so failures are diagnosable
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err.message);
+  console.error('\n[CRASH] Uncaught exception:', err.stack || err.message);
 });
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled rejection:', err?.message || err);
+  console.error('\n[CRASH] Unhandled rejection:', err?.stack || err?.message || err);
 });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

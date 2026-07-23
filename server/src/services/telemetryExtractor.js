@@ -109,10 +109,12 @@ function extractGpmfChunked(filePath) {
     let done = false;
     let chunksRead = 0;
     const totalChunks = Math.ceil(fileSize / chunkSize);
+    let moovParsed = false; // set to true once onReady fires
 
     mp4boxFile.onError = reject;
 
     mp4boxFile.onReady = function (videoData) {
+      moovParsed = true;
       const trackSummary = videoData.tracks.map(t => `${t.codec}(${t.nb_samples})`).join(', ');
       console.log(`  [chunked] ${filename}: mp4box ready — tracks: ${trackSummary}`);
       let foundVideo = false;
@@ -146,6 +148,8 @@ function extractGpmfChunked(filePath) {
         rawDataArr.push(sample.data);
         timingSamples.push({ cts: sample.cts, duration: sample.duration });
       }
+      // Release extracted samples from mp4box's internal buffer to free memory
+      try { mp4boxFile.releaseUsedSamples(id, rawDataArr.length); } catch { }
       console.log(`  [chunked] ${filename}: samples received ${rawDataArr.length}/${nb_samples}`);
       // Wait until all expected samples have arrived before resolving
       if (nb_samples > 0 && rawDataArr.length < nb_samples) return;
@@ -203,10 +207,16 @@ function extractGpmfChunked(filePath) {
 
         const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
         ab.fileStart = offset;
-        mp4boxFile.appendBuffer(ab);
-        // Always advance by what we actually read — do NOT use appendBuffer's return value,
-        // which can jump over the mdat atom and skip all the sample data.
-        offset = end;
+        const nextNeeded = mp4boxFile.appendBuffer(ab);
+        // After moov is parsed, mp4box returns the file offset of the next needed byte.
+        // This lets us skip large video/audio mdat sections and read only GPMF sample data,
+        // dramatically reducing memory usage for large files.
+        // Before moov is parsed, read sequentially so we don't miss the moov itself.
+        if (moovParsed && nextNeeded != null && nextNeeded > end) {
+          offset = nextNeeded;
+        } else {
+          offset = end;
+        }
 
         // onSamples may have fired synchronously inside appendBuffer
         if (!done) {

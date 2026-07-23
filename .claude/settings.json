@@ -66,7 +66,13 @@
       "Bash(netstat -ano)",
       "Bash(taskkill /PID 19612 /F)",
       "Bash(cmd /c \"taskkill /PID 19612 /F\")",
-      "Bash(powershell -Command \"Stop-Process -Id 19612 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; \\(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\\) | Select-Object -ExpandProperty OwningProcess\")"
+      "Bash(powershell -Command \"Stop-Process -Id 19612 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; \\(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\\) | Select-Object -ExpandProperty OwningProcess\")",
+      "Bash(node -e \"console.log\\(typeof fetch, typeof AbortSignal?.timeout\\)\")",
+      "Bash(node -e \"fetch\\('https://nominatim.openstreetmap.org/reverse?lat=46.0&lon=7.0&zoom=13&format=json', { headers: {'User-Agent': 'test'}, signal: AbortSignal.timeout\\(5000\\) }\\).then\\(r => r.json\\(\\)\\).then\\(d => console.log\\(JSON.stringify\\(d\\).slice\\(0,200\\)\\)\\).catch\\(e => console.error\\('FAIL:', e.message\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3001/api/media/videos%20alpes_Alpes%202022_alpes2022_media_20220708%20Bormio%20Chiavenna_GX010123/places\")",
+      "Bash(curl -sv \"http://localhost:3001/api/media/videos%20alpes_Alpes%202022_alpes2022_media_20220708%20Bormio%20Chiavenna_GX010123/places\")",
+      "Bash(node --check src/services/geocoder.js)",
+      "Bash(node --check src/routes/videos.js)"
     ]
   }
 }
