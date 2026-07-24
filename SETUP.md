@@ -86,6 +86,15 @@ npm run dev
 
 This uses `concurrently` to start the server (`node --watch`) and the Vite dev server simultaneously.
 
+Alternatively, use the platform launcher scripts, which also free leftover ports on 3001/5173 and open the browser once both are ready:
+
+```bash
+./scripts/start.sh      # Linux/Synology
+```
+```powershell
+.\scripts\start.ps1      # Windows (opens server + client in separate windows)
+```
+
 ### Server only
 
 ```bash
@@ -106,6 +115,26 @@ npm run build --prefix client
 
 # 2. Start the server (it will serve the built client from client/dist)
 NODE_ENV=production npm run start --prefix server
+```
+
+---
+
+## Utility scripts
+
+Each script below has a `.sh` (Linux) and `.ps1` (Windows) version with identical behavior, in `scripts/`.
+
+| Script | Purpose |
+|--------|---------|
+| `clear-cache` | Deletes `video_cache/` metadata + thumbnails so the server rebuilds them from scratch |
+| `export-gpx [output-dir]` | Exports GPS tracks from all videos in `DATA_DIR` to individual `.gpx` files (defaults to `scripts/tracks-videos/`) |
+
+```bash
+./scripts/clear-cache.sh
+./scripts/export-gpx.sh ./my-tracks
+```
+```powershell
+.\scripts\clear-cache.ps1
+.\scripts\export-gpx.ps1 .\my-tracks
 ```
 
 ---
@@ -174,6 +203,15 @@ npm install
 npm run electron:build
 ```
 
+Or use the wrapper script (same steps, plus preflight checks for `ffmpeg`/Wine):
+
+```powershell
+.\scripts\build-installer.ps1
+```
+```bash
+./scripts/build-installer.sh    # cross-builds from Linux/macOS; requires Wine for the NSIS step
+```
+
 This runs three steps automatically:
 
 1. `scripts/prepare-build.mjs` — finds `ffmpeg` on your `PATH` and copies it to `build-resources/`. You can also skip this by placing `ffmpeg.exe` in `build-resources/` manually before building.
@@ -181,6 +219,8 @@ This runs three steps automatically:
 3. `electron-builder` — produces `dist-electron/Mapa GoPro Setup x.x.x.exe`
 
 > **Note:** ffmpeg must be on your `PATH` at build time (or pre-placed in `build-resources/`). It is bundled into the installer so end users do not need to install it separately.
+>
+> The installer target is Windows-only (NSIS). Building it from Linux/macOS cross-compiles via Wine, which `electron-builder` requires for the NSIS step (`sudo apt install wine` on Debian/Ubuntu).
 
 ### Unpackaged test (no installer)
 

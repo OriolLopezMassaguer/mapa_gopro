@@ -49,6 +49,10 @@ Local web app for visualizing GoPro footage and photos on an interactive map. It
    ```powershell
    .\scripts\start.ps1          # opens separate PS windows for server and client
    ```
+   Or on Linux/Synology:
+   ```bash
+   ./scripts/start.sh           # frees ports, starts server + client, opens browser
+   ```
 
 ## API Endpoints
 
@@ -82,11 +86,12 @@ mapa_gopro/
   passes/          GPX files with mountain pass waypoints (by region)
   tracks/          Recorded BMW Motorrad GPS tracks
   scripts/         Utility and launcher scripts
-    start.ps1        Windows launcher (opens server + client in separate windows)
-    start-babel.sh   Linux/Synology launcher
-    clear-cache.ps1  Clear video cache
-    export-gpx.ps1   Export GPX data
-    generate-pdf.ps1 Generate PDF exports
-    generate_map.py  Map generation script
-    start-frontend.js Frontend launcher helper
+    start.ps1            Windows launcher (opens server + client in separate windows)
+    start.sh             Linux/Synology launcher (starts server + client together)
+    clear-cache.ps1/.sh  Clear video cache
+    export-gpx.ps1/.sh   Export GPX data
+    generate-pdf.ps1/.sh Generate Switzerland trip PDF
+    build-installer.ps1/.sh  Build the Windows installer (NSIS .exe)
+    generate_map.py      Map generation script
+    start-frontend.js    Frontend launcher helper
 ```

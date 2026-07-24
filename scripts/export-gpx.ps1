@@ -5,4 +5,4 @@
 $root = $PSScriptRoot
 $outputDir = if ($args[0]) { $args[0] } else { Join-Path $root "tracks-videos" }
 
-node "$root\scripts\export-gpx.mjs" $outputDir
+node "$root\export-gpx.mjs" $outputDir

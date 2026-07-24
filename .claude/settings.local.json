@@ -43,7 +43,16 @@
       "Bash(curl -s http://localhost:3001/api/videos)",
       "Bash(curl -s http://localhost:3001/api/media/all)",
       "Bash(curl -s http://127.0.0.1:3001/api/media/all)",
-      "Bash(curl -v http://127.0.0.1:3001/api/media/all)"
+      "Bash(curl -v http://127.0.0.1:3001/api/media/all)",
+      "Bash(chmod +x /run/media/oriol/Datos/mapa_gopro/scripts/start.sh)",
+      "Bash(chmod +x /run/media/oriol/Datos/mapa_gopro/scripts/clear-cache.sh /run/media/oriol/Datos/mapa_gopro/scripts/export-gpx.sh /run/media/oriol/Datos/mapa_gopro/scripts/generate-pdf.sh)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(chmod +x /run/media/oriol/Datos/mapa_gopro/scripts/build-installer.sh)",
+      "Bash(bash -n scripts/start.sh)",
+      "Bash(bash -n scripts/clear-cache.sh)",
+      "Bash(bash -n scripts/export-gpx.sh)",
+      "Bash(bash -n scripts/generate-pdf.sh)",
+      "Bash(bash -n scripts/build-installer.sh)"
     ]
   }
 }
