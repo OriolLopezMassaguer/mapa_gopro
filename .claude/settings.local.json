@@ -52,7 +52,12 @@
       "Bash(bash -n scripts/clear-cache.sh)",
       "Bash(bash -n scripts/export-gpx.sh)",
       "Bash(bash -n scripts/generate-pdf.sh)",
-      "Bash(bash -n scripts/build-installer.sh)"
+      "Bash(bash -n scripts/build-installer.sh)",
+      "Bash(npm install *)",
+      "Bash(git rm *)",
+      "Bash(npm cache *)",
+      "Bash(timeout 6 npm run dev --prefix server)",
+      "Read(//tmp/**)"
     ]
   }
 }
