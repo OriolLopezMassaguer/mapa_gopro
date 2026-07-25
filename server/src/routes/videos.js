@@ -6,7 +6,8 @@ import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getAllVideoTra
 import { generateKml } from '../services/kmlExporter.js';
 import { writeGpxFile } from '../services/gpxExporter.js';
 import { streamVideo } from '../services/videoStreamer.js';
-import { getPlacesForVideo, deletePlacesCache } from '../services/geocoder.js';
+import { getPlacesForMedia, deletePlacesCache } from '../services/geocoder.js';
+import { needsTranscode, getTranscodeState, startTranscode, getTranscodedFilePath } from '../services/transcoder.js';
 
 const router = Router();
 
@@ -135,14 +136,19 @@ router.get('/:id/export.gpx', (req, res) => {
   res.status(500).json({ error: 'GPX generation failed' });
 });
 
-// GET /api/media/:id/places — list of villages/towns visited during a video (reverse-geocoded from GPS track)
+// GET /api/media/:id/places — place name(s) for a video's GPS track or a photo's
+// single GPS point (reverse-geocoded via Nominatim)
 router.get('/:id/places', async (req, res) => {
   const entry = getFullMediaEntry(req.params.id);
-  if (!entry || entry.type !== 'video' || !entry.coordinates?.length) {
-    return res.json([]);
-  }
+  if (!entry) return res.json([]);
+
+  const coordinates = entry.type === 'video' ? entry.coordinates
+    : entry.type === 'photo' ? (entry.startPoint ? [entry.startPoint] : null)
+    : null;
+  if (!coordinates?.length) return res.json([]);
+
   try {
-    const places = await getPlacesForVideo(req.params.id, entry.coordinates);
+    const places = await getPlacesForMedia(req.params.id, coordinates);
     res.json(places);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -174,7 +180,7 @@ router.get('/:id/telemetry', (req, res) => {
 });
 
 // GET /api/media/:id/stream — stream video or serve photo
-router.get('/:id/stream', (req, res) => {
+router.get('/:id/stream', async (req, res) => {
   const filePath = getMediaFilePath(req.params.id);
   if (!filePath) {
     return res.status(404).json({ error: 'Media not found' });
@@ -190,9 +196,46 @@ router.get('/:id/stream', (req, res) => {
       '.heic': 'image/heic',
     };
     res.type(mimeTypes[ext] || 'image/jpeg').sendFile(filePath);
-  } else {
-    streamVideo(req, res, filePath);
+    return;
   }
+
+  if (await needsTranscode(filePath)) {
+    const state = getTranscodeState(req.params.id);
+    if (state === 'ready') {
+      streamVideo(req, res, getTranscodedFilePath(req.params.id));
+    } else {
+      startTranscode(filePath, req.params.id).catch(() => {}); // logged via /playback-info polling
+      res.status(503).json({ error: 'transcoding', message: 'Video is being converted for browser playback' });
+    }
+    return;
+  }
+
+  streamVideo(req, res, filePath);
+});
+
+// GET /api/media/:id/playback-info — whether this video needs browser-compatible
+// transcoding (e.g. HEVC/H.265) and whether that transcode is ready yet.
+router.get('/:id/playback-info', async (req, res) => {
+  const filePath = getMediaFilePath(req.params.id);
+  if (!filePath) return res.status(404).json({ error: 'Media not found' });
+  if (getMediaType(req.params.id) !== 'video') return res.json({ needsTranscode: false, ready: true });
+
+  const transcode = await needsTranscode(filePath);
+  res.json({
+    needsTranscode: transcode,
+    ready: !transcode || getTranscodeState(req.params.id) === 'ready',
+  });
+});
+
+// POST /api/media/:id/transcode — kick off (or no-op if already running/done)
+// background transcoding to a browser-compatible format.
+router.post('/:id/transcode', async (req, res) => {
+  const filePath = getMediaFilePath(req.params.id);
+  if (!filePath) return res.status(404).json({ error: 'Media not found' });
+
+  const state = getTranscodeState(req.params.id);
+  if (state === 'not-started') startTranscode(filePath, req.params.id).catch(() => {});
+  res.json({ state: state === 'ready' ? 'ready' : 'in-progress' });
 });
 
 // GET /api/media/:id/thumbnail — thumbnail for videos, full image for photos

@@ -39,7 +39,7 @@ export default function MediaPanel({ item, track, trackLoading, onClose, onReche
   const [placesError, setPlacesError] = useState(null);
 
   useEffect(() => {
-    if (item.type !== 'video' || item.noGps) {
+    if ((item.type !== 'video' && item.type !== 'photo') || item.noGps) {
       setPlaces(null);
       return;
     }
@@ -136,7 +136,7 @@ export default function MediaPanel({ item, track, trackLoading, onClose, onReche
         </div>
       </div>
 
-      {isVideo && <VideoPlayer videoId={item.id} />}
+      {isVideo && <VideoPlayer key={item.id} videoId={item.id} />}
 
       {isPhoto && (
         <div className="photo-viewer">
@@ -199,10 +199,10 @@ export default function MediaPanel({ item, track, trackLoading, onClose, onReche
         {recheckLoading && <div className="loading-track">Re-extracting GPS from source file…</div>}
         {recheckError && <div className="loading-track" style={{ color: '#c00' }}>{recheckError}</div>}
 
-        {isVideo && !item.noGps && (
+        {(isVideo || isPhoto) && !item.noGps && (
           <div className="places-section">
             <div className="places-header">
-              <span className="info-label">Places visited</span>
+              <span className="info-label">{isVideo ? 'Places visited' : 'Place'}</span>
               <button
                 className="panel-download-btn"
                 onClick={handleRefreshPlaces}

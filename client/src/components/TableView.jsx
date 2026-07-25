@@ -1,6 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { fetchAllMedia, fetchAllPassWaypoints, fetchRecordedTracks, getThumbnailUrl, getKmlUrl, getGpxUrl } from '../services/api';
 import { REGIONS, MONTH_NAMES, inRegion } from '../constants';
+
+const ROW_HEIGHT = 45; // px — matches the thumbnail cell's fixed height + padding + border
 
 const COLUMNS = [
   { key: 'filename',    label: 'File' },
@@ -174,26 +177,46 @@ export default function TableView({
       if (typeFilter === 'nogps' && !item.noGps) return false;
       if (item.type === 'pass' && typeFilter !== 'pass' && typeFilter !== 'all') return false;
       if (item.type === 'track' && typeFilter !== 'track' && typeFilter !== 'all') return false;
-      // Date and region filters only apply to items that actually have coordinates/dates
-      if (item.startDate) {
-        if (activeRegion && !inRegion(item, activeRegion)) return false;
-        if (filterYear && new Date(item.startDate).getFullYear() !== filterYear) return false;
-        if (filterMonth && new Date(item.startDate).getMonth() + 1 !== filterMonth) return false;
-        if (filterDay && new Date(item.startDate).getDate() !== filterDay) return false;
-      } else if (item.startPoint) {
-        if (activeRegion && !inRegion(item, activeRegion)) return false;
+      // Region filter applies to anything with a location, dated or not
+      if (item.startPoint && activeRegion && !inRegion(item, activeRegion)) return false;
+
+      // Passes have no inherent date (shown/hidden only via the Passes toggle on the
+      // map, never by date) so they're exempt. Everything else must match an active
+      // date filter to stay visible, matching App.jsx's filteredVideos for the map.
+      if (item.type !== 'pass' && (filterYear || filterMonth || filterDay)) {
+        if (!item.startDate) return false;
+        const d = new Date(item.startDate);
+        if (filterYear && d.getFullYear() !== filterYear) return false;
+        if (filterMonth && d.getMonth() + 1 !== filterMonth) return false;
+        if (filterDay && d.getDate() !== filterDay) return false;
       }
       return true;
     });
   }, [items, typeFilter, activeRegion, filterYear, filterMonth, filterDay]);
 
-  const sorted = [...filtered].sort((a, b) => {
-    const av = sortValue(a, sortKey);
-    const bv = sortValue(b, sortKey);
-    if (av < bv) return sortAsc ? -1 : 1;
-    if (av > bv) return sortAsc ? 1 : -1;
-    return 0;
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const av = sortValue(a, sortKey);
+      const bv = sortValue(b, sortKey);
+      if (av < bv) return sortAsc ? -1 : 1;
+      if (av > bv) return sortAsc ? 1 : -1;
+      return 0;
+    });
+  }, [filtered, sortKey, sortAsc]);
+
+  const scrollRef = useRef(null);
+  const rowVirtualizer = useVirtualizer({
+    count: sorted.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 10,
   });
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+  const paddingBottom = virtualRows.length > 0
+    ? rowVirtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end
+    : 0;
+  const colSpan = COLUMNS.length + 1; // +1 for the thumbnail column
 
   const counts = {
     all: items.length,
@@ -320,7 +343,7 @@ export default function TableView({
       ) : sorted.length === 0 ? (
         <div className="table-empty">No items found.</div>
       ) : (
-        <div className="table-scroll">
+        <div className="table-scroll" ref={scrollRef}>
           <table className="media-table">
             <thead>
               <tr>
@@ -341,7 +364,12 @@ export default function TableView({
               </tr>
             </thead>
             <tbody>
-              {sorted.map(item => (
+              {paddingTop > 0 && (
+                <tr><td colSpan={colSpan} style={{ height: paddingTop, padding: 0, border: 'none' }} /></tr>
+              )}
+              {virtualRows.map(virtualRow => {
+                const item = sorted[virtualRow.index];
+                return (
                 <tr
                   key={item.id}
                   className={item.type === 'pass' ? 'row--pass' : item.type === 'track' ? 'row--track' : item.noGps ? 'row--nogps' : ''}
@@ -393,7 +421,11 @@ export default function TableView({
                     );
                   })}
                 </tr>
-              ))}
+                );
+              })}
+              {paddingBottom > 0 && (
+                <tr><td colSpan={colSpan} style={{ height: paddingBottom, padding: 0, border: 'none' }} /></tr>
+              )}
             </tbody>
           </table>
         </div>

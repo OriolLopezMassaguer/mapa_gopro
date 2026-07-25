@@ -2,6 +2,7 @@ import path from 'path';
 import { execFile } from 'child_process';
 import fs from 'fs';
 import config from '../config.js';
+import { lowerChildPriority } from './priority.js';
 
 export function generateThumbnail(videoPath, videoId) {
   const outputPath = path.join(config.thumbnailDir, `${videoId}.jpg`);
@@ -12,7 +13,7 @@ export function generateThumbnail(videoPath, videoId) {
   }
 
   return new Promise((resolve, reject) => {
-    execFile(config.ffmpegPath || process.env.FFMPEG_PATH || 'ffmpeg', [
+    const child = execFile(config.ffmpegPath || process.env.FFMPEG_PATH || 'ffmpeg', [
       '-ss', '2',
       '-i', videoPath,
       '-vframes', '1',
@@ -24,5 +25,6 @@ export function generateThumbnail(videoPath, videoId) {
       if (err) reject(err);
       else resolve();
     });
+    lowerChildPriority(child.pid);
   });
 }

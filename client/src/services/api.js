@@ -20,3 +20,5 @@ export const fetchAllPassWaypoints = () => api.get('/passes/all').then(r => r.da
 export const fetchRecordedTracks = () => api.get('/recorded-tracks').then(r => r.data);
 export const fetchPlaces = (id) => api.get(`/media/${id}/places`).then(r => r.data);
 export const clearPlacesCache = (id) => api.delete(`/media/${id}/places`).then(r => r.data);
+export const fetchPlaybackInfo = (id) => api.get(`/media/${id}/playback-info`).then(r => r.data);
+export const startTranscode = (id) => api.post(`/media/${id}/transcode`).then(r => r.data);

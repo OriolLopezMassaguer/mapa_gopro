@@ -1,8 +1,10 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Rectangle, Tooltip, useMap } from 'react-leaflet';
-import { Fragment } from 'react';
+import MarkerClusterGroup from 'react-leaflet-cluster';
+import { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
 import L from 'leaflet';
-import { useEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { getThumbnailUrl } from '../services/api';
 
 // Fix Leaflet default marker icon paths for bundlers
@@ -71,10 +73,49 @@ function createVideoEndIcon(color, isSelected) {
   });
 }
 
+// A thumbnail icon's HTML embeds a per-item image URL, so unlike the plain color
+// icons below it can't be shared across items — no point caching it here. It's still
+// cheap to build, and MediaMarker is memoized so this only runs when that marker's
+// own props actually change.
+function createThumbIcon(url, color, isSelected, isVideo) {
+  const size = isSelected ? 46 : 36;
+  const border = isSelected ? 3 : 2;
+  return new L.DivIcon({
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -(size / 2 + 6)],
+    html: `<div style="width:${size}px;height:${size}px;border-radius:6px;border:${border}px solid ${color};background:#333 url('${url}') center/cover no-repeat;box-shadow:0 1px 4px rgba(0,0,0,0.4);position:relative">
+      ${isVideo ? `<div style="position:absolute;bottom:2px;right:2px;width:0;height:0;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent rgba(255,255,255,0.95);filter:drop-shadow(0 0 1px rgba(0,0,0,0.6))"></div>` : ''}
+    </div>`,
+  });
+}
+
+// Icons only vary by (type, color, isSelected) — a handful of combinations total —
+// so cache the L.DivIcon instances instead of rebuilding one (with a fresh SVG string)
+// per marker on every render.
+const iconCache = new Map();
+function cachedIcon(key, factory) {
+  let icon = iconCache.get(key);
+  if (!icon) {
+    icon = factory();
+    iconCache.set(key, icon);
+  }
+  return icon;
+}
+
 function getIcon(item, isSelected, yearColorMap) {
   const color = getColor(item, yearColorMap);
-  if (item.type === 'photo') return createPhotoIcon(color, isSelected);
-  return createVideoIcon(color, isSelected);
+  if (item.hasThumbnail) {
+    return createThumbIcon(getThumbnailUrl(item.id), color, isSelected, item.type === 'video');
+  }
+  const key = `${item.type}|${color}|${isSelected}`;
+  if (item.type === 'photo') return cachedIcon(key, () => createPhotoIcon(color, isSelected));
+  return cachedIcon(key, () => createVideoIcon(color, isSelected));
+}
+
+function getEndIcon(color, isSelected) {
+  return cachedIcon(`end|${color}|${isSelected}`, () => createVideoEndIcon(color, isSelected));
 }
 
 function createPassIcon() {
@@ -91,6 +132,68 @@ function createPassIcon() {
 }
 
 const PASS_ICON = createPassIcon();
+
+// Memoized so selecting/filtering only re-renders the marker(s) whose props actually
+// changed, instead of rebuilding all ~4600+ markers on every state change in App.
+const MediaMarker = memo(function MediaMarker({ item, isSelected, yearColorMap, onSelectItem }) {
+  const icon = getIcon(item, isSelected, yearColorMap);
+  const handleClick = useCallback(() => onSelectItem(item), [onSelectItem, item]);
+  return (
+    <Marker
+      position={[item.startPoint.lat, item.startPoint.lon]}
+      icon={icon}
+      eventHandlers={{ click: handleClick }}
+    >
+      <Popup>
+        <div style={{ textAlign: 'center', maxWidth: 220 }}>
+          {item.hasThumbnail && (
+            <img
+              src={getThumbnailUrl(item.id)}
+              alt={item.filename}
+              style={{ width: 200, borderRadius: 4, marginBottom: 4 }}
+              loading="lazy"
+            />
+          )}
+          <div><strong>{item.filename}</strong></div>
+          <div style={{ fontSize: 11, color: '#888' }}>
+            {item.type === 'video' ? '🎬 Video' : '📷 Photo'}
+            {item.subfolder ? ` — ${item.subfolder}` : ''}
+          </div>
+          {item.startDate && (
+            <div style={{ fontSize: 12, color: '#666' }}>
+              {new Date(item.startDate).toLocaleString()}
+            </div>
+          )}
+        </div>
+      </Popup>
+    </Marker>
+  );
+});
+
+const VideoEndMarker = memo(function VideoEndMarker({ item, isSelected, yearColorMap, onSelectItem }) {
+  const color = getColor(item, yearColorMap);
+  const icon = getEndIcon(color, isSelected);
+  const handleClick = useCallback(() => onSelectItem(item), [onSelectItem, item]);
+  return (
+    <Marker
+      position={[item.endPoint.lat, item.endPoint.lon]}
+      icon={icon}
+      eventHandlers={{ click: handleClick }}
+    >
+      <Popup>
+        <div style={{ textAlign: 'center', maxWidth: 200 }}>
+          <div><strong>{item.filename}</strong></div>
+          <div style={{ fontSize: 11, color: '#888' }}>🏁 End point</div>
+          {item.startDate && (
+            <div style={{ fontSize: 12, color: '#666' }}>
+              {new Date(item.startDate).toLocaleString()}
+            </div>
+          )}
+        </div>
+      </Popup>
+    </Marker>
+  );
+});
 
 function FitBounds({ track, selectedItem, mediaItems, passWaypoints, recordedTracks, recordedTrackDate }) {
   const map = useMap();
@@ -127,13 +230,15 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
   const defaultCenter = [45.9, 6.9];
 
   // Only show tracks for items currently visible
-  const visibleIds = new Set(mediaItems.map(i => i.id));
-  const filteredTracks = allTracks.filter(t => visibleIds.has(t.id));
+  const filteredTracks = useMemo(() => {
+    const visibleIds = new Set(mediaItems.map(i => i.id));
+    return allTracks.filter(t => visibleIds.has(t.id));
+  }, [mediaItems, allTracks]);
 
   // Unique years in current mediaItems for legend
-  const legendYears = [...new Set(
+  const legendYears = useMemo(() => [...new Set(
     mediaItems.filter(i => i.startDate).map(i => new Date(i.startDate).getFullYear())
-  )].sort();
+  )].sort(), [mediaItems]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -214,58 +319,29 @@ export default function MapView({ mediaItems, selectedItem, track, allTracks, on
           );
         })}
 
-        {mediaItems.map(item => (
-          <Marker
-            key={item.id}
-            position={[item.startPoint.lat, item.startPoint.lon]}
-            icon={getIcon(item, selectedItem?.id === item.id, yearColorMap)}
-            eventHandlers={{ click: () => onSelectItem(item) }}
-          >
-            <Popup>
-              <div style={{ textAlign: 'center', maxWidth: 220 }}>
-                {item.hasThumbnail && (
-                  <img
-                    src={getThumbnailUrl(item.id)}
-                    alt={item.filename}
-                    style={{ width: 200, borderRadius: 4, marginBottom: 4 }}
-                    loading="lazy"
-                  />
-                )}
-                <div><strong>{item.filename}</strong></div>
-                <div style={{ fontSize: 11, color: '#888' }}>
-                  {item.type === 'video' ? '🎬 Video' : '📷 Photo'}
-                  {item.subfolder ? ` — ${item.subfolder}` : ''}
-                </div>
-                {item.startDate && (
-                  <div style={{ fontSize: 12, color: '#666' }}>
-                    {new Date(item.startDate).toLocaleString()}
-                  </div>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        <MarkerClusterGroup chunkedLoading maxClusterRadius={60}>
+          {mediaItems.map(item => (
+            <MediaMarker
+              key={item.id}
+              item={item}
+              isSelected={selectedItem?.id === item.id}
+              yearColorMap={yearColorMap}
+              onSelectItem={onSelectItem}
+            />
+          ))}
+        </MarkerClusterGroup>
 
-        {mediaItems.filter(item => item.type === 'video' && item.endPoint).map(item => (
-          <Marker
-            key={`end-${item.id}`}
-            position={[item.endPoint.lat, item.endPoint.lon]}
-            icon={createVideoEndIcon(getColor(item, yearColorMap), selectedItem?.id === item.id)}
-            eventHandlers={{ click: () => onSelectItem(item) }}
-          >
-            <Popup>
-              <div style={{ textAlign: 'center', maxWidth: 200 }}>
-                <div><strong>{item.filename}</strong></div>
-                <div style={{ fontSize: 11, color: '#888' }}>🏁 End point</div>
-                {item.startDate && (
-                  <div style={{ fontSize: 12, color: '#666' }}>
-                    {new Date(item.startDate).toLocaleString()}
-                  </div>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        <MarkerClusterGroup chunkedLoading maxClusterRadius={60}>
+          {mediaItems.filter(item => item.type === 'video' && item.endPoint).map(item => (
+            <VideoEndMarker
+              key={`end-${item.id}`}
+              item={item}
+              isSelected={selectedItem?.id === item.id}
+              yearColorMap={yearColorMap}
+              onSelectItem={onSelectItem}
+            />
+          ))}
+        </MarkerClusterGroup>
 
         {track?.coordinates && !filteredTracks.some(t => t.id === selectedItem?.id) && (
           <Polyline

@@ -5,19 +5,48 @@ import config from '../config.js';
 let lastCallTime = 0;
 const MIN_INTERVAL = 1200; // Nominatim: max 1 req/sec, use 1.2s to be safe
 
-async function reverseGeocode(lat, lon) {
-  const now = Date.now();
-  const wait = Math.max(0, MIN_INTERVAL - (now - lastCallTime));
-  if (wait > 0) await new Promise(r => setTimeout(r, wait));
-  lastCallTime = Date.now();
+// Serialize every Nominatim call through a single chain, process-wide. A plain
+// "check lastCallTime, then act" pacer races when two videos are geocoded
+// concurrently (e.g. clicking to a new video before the previous /places request
+// finishes): both read the same stale lastCallTime before either updates it, so
+// both fire together — bursting past the 1 req/sec limit and triggering 429s.
+// Chaining onto `queue` guarantees true one-at-a-time pacing regardless of how
+// many callers are in flight.
+let queue = Promise.resolve();
 
+function fetchOnce(lat, lon) {
   const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=13&format=json&accept-language=en`;
-  const res = await fetch(url, {
+  return fetch(url, {
     headers: { 'User-Agent': 'mapa-gopro/1.0 (private GPS viewer)' },
     signal: AbortSignal.timeout(10_000),
   });
-  if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`);
-  return res.json();
+}
+
+async function throttle() {
+  const wait = Math.max(0, MIN_INTERVAL - (Date.now() - lastCallTime));
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  lastCallTime = Date.now();
+}
+
+async function reverseGeocode(lat, lon) {
+  const run = queue.then(async () => {
+    for (let attempt = 0; ; attempt++) {
+      await throttle();
+      const res = await fetchOnce(lat, lon);
+      if (res.ok) return res.json();
+      if (res.status === 429 && attempt < 3) {
+        const retryAfter = parseInt(res.headers.get('retry-after'), 10);
+        const backoff = Number.isFinite(retryAfter) ? retryAfter * 1000 : MIN_INTERVAL * 2 ** (attempt + 1);
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      throw new Error(`Nominatim HTTP ${res.status}`);
+    }
+  });
+  // Chain unconditionally so a failed/throwing call doesn't stall later callers,
+  // but callers of reverseGeocode still see the original rejection via `run`.
+  queue = run.catch(() => {});
+  return run;
 }
 
 function extractPlaceName(data) {
@@ -69,7 +98,9 @@ function sampleCoordinates(coordinates, maxSamples = 60) {
   return result;
 }
 
-export async function getPlacesForVideo(id, coordinates) {
+// Reverse-geocodes a track's coordinates into a deduped list of place names.
+// A photo is just a one-point "track", so this works unchanged for both.
+export async function getPlacesForMedia(id, coordinates) {
   const cached = loadCachedPlaces(id);
   if (cached) return cached;
 

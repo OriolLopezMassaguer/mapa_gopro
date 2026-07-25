@@ -1,7 +1,10 @@
 import { workerData, parentPort } from 'worker_threads';
 import { extractVideoTelemetry, extractPhotoGps } from './telemetryExtractor.js';
+import { lowerOwnThreadPriority } from './priority.js';
 
 const { file } = workerData;
+
+lowerOwnThreadPriority();
 
 try {
   let result;

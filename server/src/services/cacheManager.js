@@ -360,8 +360,12 @@ const CACHE_CONCURRENCY = parseInt(process.env.CACHE_CONCURRENCY, 10) || 4;
 // Loading it in too many workers simultaneously causes OOM. Keep this at 1–2.
 const VIDEO_CONCURRENCY = parseInt(process.env.VIDEO_CONCURRENCY, 10) || 1;
 
-// Phase 1: load existing cache entries into memory — fast, runs before server is ready.
-export async function loadCache() {
+// Phase 1: load the on-disk cache index into memory and trust it as-is — fast (no
+// filesystem walk), runs before the server is ready. This makes every previously
+// processed video/photo servable immediately on startup. Phase 1b (reconcileWithDisk,
+// below) verifies these entries against the real filesystem in the background and
+// discovers new/changed/removed files.
+export async function loadCacheIndexes() {
   ensureDirs();
   const t0 = Date.now();
   const ts = () => `[+${((Date.now() - t0) / 1000).toFixed(1)}s]`;
@@ -369,31 +373,45 @@ export async function loadCache() {
   console.log(`${ts()} Loading fingerprint index…`);
   loadFingerprintIndex();
 
-  console.log(`${ts()} Starting in parallel:`);
-  console.log(`  [1] Scanning: ${config.mediaDir}`);
-  console.log(`  [2] Loading cache: ${config.metadataDir}`);
+  console.log(`${ts()} Loading cache index: ${config.metadataDir}`);
+  await loadAllCacheEntries();
 
-  const [mediaFiles] = await Promise.all([
-    scanMediaDirectory().then(files => {
-      console.log(`${ts()} [1] Scan done — ${files.filter(f => f.type === 'video').length} videos, ${files.filter(f => f.type === 'photo').length} photos`);
-      return files;
-    }),
-    loadAllCacheEntries(),
-  ]);
-  console.log(`${ts()} Both complete — ${mediaFiles.length} media files on disk, ${diskCache.size} cache entries in memory`);
+  for (const entry of diskCache.values()) {
+    allMediaIndex.set(entry.id, entry);
+    if (!entry.noGps) mediaIndex.set(entry.id, entry);
+  }
+  invalidate();
+
+  console.log(`${ts()} Cache index loaded — ${mediaIndex.size} items with GPS ready to serve immediately`);
+  console.log(`  ${thumbnailSet.size} thumbnails indexed`);
+}
+
+// Phase 1b: reconcile the in-memory index against the real filesystem — slow (full
+// directory walk), runs in the background after the server is already serving Phase 1
+// data. Detects new files (returned for Phase 2 extraction), moved/modified files, and
+// prunes entries whose file is no longer on disk.
+export async function reconcileWithDisk() {
+  const t0 = Date.now();
+  const ts = () => `[+${((Date.now() - t0) / 1000).toFixed(1)}s]`;
+
+  console.log(`${ts()} Reconciling with disk: ${config.mediaDir}`);
+  const mediaFiles = await scanMediaDirectory();
+  console.log(`${ts()} Scan done — ${mediaFiles.filter(f => f.type === 'video').length} videos, ${mediaFiles.filter(f => f.type === 'photo').length} photos`);
 
   if (mediaFiles.length === 0) {
-    console.log('No media files found.');
+    console.log('No media files found on disk.');
     return [];
   }
 
   console.log(`${ts()} Matching files against cache…`);
+  const seen = new Set();
   let cached = 0, relocated = 0;
   const toProcess = [];
 
   batchMode = true; // defer index saves until all relocations are done
   try {
     for (const file of mediaFiles) {
+      seen.add(file.id);
       let cacheEntry = readCache(file.id);
       const mtimeMatch = cacheEntry && Math.abs(
         new Date(cacheEntry.lastModified).getTime() - new Date(file.lastModified).getTime()
@@ -419,7 +437,7 @@ export async function loadCache() {
           subfolder: file.subfolder,
         };
         writeCache(file.id, updatedEntry);
-        if (oldId !== file.id) deleteCache(oldId);
+        if (oldId !== file.id) { deleteCache(oldId); seen.delete(oldId); }
         allMediaIndex.set(file.id, updatedEntry);
         if (!updatedEntry.noGps) mediaIndex.set(file.id, updatedEntry);
         cached++;
@@ -429,6 +447,18 @@ export async function loadCache() {
 
       toProcess.push(file);
     }
+
+    // Entries loaded from cache-index.json whose file no longer exists on disk —
+    // drop them from the serving index now that we have ground truth.
+    let pruned = 0;
+    for (const id of allMediaIndex.keys()) {
+      if (!seen.has(id)) {
+        allMediaIndex.delete(id);
+        mediaIndex.delete(id);
+        pruned++;
+      }
+    }
+    if (pruned > 0) console.log(`${ts()} Pruned ${pruned} entries no longer found on disk`);
   } finally {
     batchMode = false;
     if (relocated > 0) {
@@ -438,12 +468,12 @@ export async function loadCache() {
     }
   }
 
+  invalidate();
   const videos = toProcess.filter(f => f.type === 'video').length;
   const photos = toProcess.filter(f => f.type === 'photo').length;
-  console.log(`${ts()} Cache load complete:`);
+  console.log(`${ts()} Reconciliation complete:`);
   console.log(`  ${cached} cached (${relocated} relocated), ${toProcess.length} new (${videos} videos, ${photos} photos)`);
   console.log(`  ${mediaIndex.size} items with GPS ready to serve`);
-  console.log(`  ${thumbnailSet.size} thumbnails indexed`);
   return toProcess;
 }
 

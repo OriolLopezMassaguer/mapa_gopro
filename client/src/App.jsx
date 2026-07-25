@@ -173,10 +173,10 @@ const passFiles = useMemo(() => {
     setFilterRegion(filterRegion === id ? null : id);
   };
 
-  const handleSelectVideo = (video) => {
+  const handleSelectVideo = useCallback((video) => {
     setSelectedVideo(video);
     setView('map');
-  };
+  }, []);
 
   const handleClose = () => {
     setSelectedVideo(null);

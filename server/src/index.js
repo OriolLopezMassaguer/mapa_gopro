@@ -6,7 +6,7 @@ import config from './config.js';
 import mediaRoutes from './routes/videos.js';
 import passesRoutes from './routes/passes.js';
 import recordedTracksRoutes from './routes/recordedTracks.js';
-import { loadCache, processNewFiles, generateMissingThumbnails } from './services/cacheManager.js';
+import { loadCacheIndexes, reconcileWithDisk, processNewFiles, generateMissingThumbnails } from './services/cacheManager.js';
 
 // Log crashes with full stack traces so failures are diagnosable
 process.on('uncaughtException', (err) => {
@@ -53,9 +53,8 @@ app.listen(PORT, async () => {
   console.log(`  Env         : ${process.env.NODE_ENV || 'development'}`);
   console.log('');
 
-  let toProcess = [];
   try {
-    toProcess = await loadCache();
+    await loadCacheIndexes();
   } catch (err) {
     console.error(`[${elapsed()}] Cache load error:`, err.message);
   }
@@ -63,13 +62,13 @@ app.listen(PORT, async () => {
   console.log('');
   console.log('========================================');
   console.log(`  READY — http://localhost:${PORT}  (${elapsed()})`);
-  if (toProcess.length > 0)
-    console.log(`  ${toProcess.length} new files queued for background processing`);
-  console.log('  Thumbnail check will run after processing');
+  console.log('  Already-processed media is servable now.');
+  console.log('  Reconciling with disk in background (new/moved/deleted files)...');
   console.log('========================================');
   console.log('');
 
-  processNewFiles(toProcess)
+  reconcileWithDisk()
+    .then((toProcess) => processNewFiles(toProcess))
     .then(() => generateMissingThumbnails())
     .catch(err => console.error('Background cache update error:', err.message));
 });
