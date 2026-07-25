@@ -4,7 +4,7 @@ import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import config from '../config.js';
 import { scanMediaDirectory } from './scanner.js';
-import { generateThumbnail } from './thumbnailGenerator.js';
+import { generateThumbnail, generatePhotoThumbnail } from './thumbnailGenerator.js';
 import { generateKml } from './kmlExporter.js';
 import { writeGpxFile, deleteGpxFile } from './gpxExporter.js';
 
@@ -304,6 +304,13 @@ async function processPhoto(file, prefix) {
 
   const gps = await runInWorker(file, 30_000);
 
+  try {
+    await generatePhotoThumbnail(file.filepath, file.id);
+    thumbnailSet.add(file.id);
+  } catch (err) {
+    console.log(`  Thumbnail failed: ${err.message}${err.stderr ? '\n' + err.stderr : ''}`);
+  }
+
   if (gps) {
     const entry = {
       id: file.id,
@@ -524,17 +531,18 @@ export async function processNewFiles(toProcess) {
 
 export async function generateMissingThumbnails() {
   const missing = Array.from(allMediaIndex.values()).filter(
-    e => e.type === 'video' && !thumbnailSet.has(e.id)
+    e => (e.type === 'video' || e.type === 'photo') && !thumbnailSet.has(e.id)
   );
   if (missing.length === 0) {
     console.log(`Thumbnail check: all ${thumbnailSet.size} thumbnails present`);
     return;
   }
-  console.log(`\nThumbnail backfill: ${missing.length} videos missing thumbnails…`);
+  console.log(`\nThumbnail backfill: ${missing.length} items missing thumbnails…`);
   let done = 0, failed = 0;
   await runPool(missing, async (entry) => {
     try {
-      await generateThumbnail(entry.filepath, entry.id);
+      if (entry.type === 'video') await generateThumbnail(entry.filepath, entry.id);
+      else await generatePhotoThumbnail(entry.filepath, entry.id);
       thumbnailSet.add(entry.id);
       invalidate();
       done++;
@@ -720,10 +728,9 @@ export function getThumbnailPath(id) {
   const entry = mediaIndex.get(id);
   if (!entry) return null;
 
-  // For photos, serve the photo itself as thumbnail
-  if (entry.type === 'photo') {
-    return entry.filepath;
-  }
-
-  return thumbnailSet.has(id) ? path.join(config.thumbnailDir, `${id}.jpg`) : null;
+  // Prefer the downscaled generated thumbnail; fall back to the original photo file
+  // if it hasn't been generated yet (e.g. background backfill still in progress).
+  if (thumbnailSet.has(id)) return path.join(config.thumbnailDir, `${id}.jpg`);
+  if (entry.type === 'photo') return entry.filepath;
+  return null;
 }

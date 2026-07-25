@@ -110,10 +110,17 @@
       "Bash(curl -s -o /tmp/streamed.mp4 -D - http://localhost:3001/api/media/__CMDSUB_OUTPUT__/stream)",
       "Bash(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 /tmp/streamed.mp4)",
       "Bash(timeout 20 bash -c 'until curl -sf http://localhost:5173 >/dev/null 2>&1; do sleep 1; done')",
-      "Bash(node check-video.js)"
+      "Bash(node check-video.js)",
+      "Bash(tail -40 /tmp/server-thumb-test.log)",
+      "Bash(timeout 60 bash -c 'until curl -sf http://localhost:3001/api/media >/dev/null 2>&1; do sleep 1; done')",
+      "Bash(node -e 'console.log\\(encodeURIComponent\\(process.argv[1]\\)\\)' '2022_GoPro 2016-01-01_GOPR2780')",
+      "Bash(curl -s -o /tmp/thumb-before.jpg -D - http://localhost:3001/api/media/__CMDSUB_OUTPUT__/thumbnail)",
+      "Read(//run/media/oriol/Datos/media/video_cache/thumbnails/**)",
+      "Bash(rm -f /run/media/oriol/Datos/media/video_cache/thumbnails/__test_photo_thumb_* *)"
     ],
     "additionalDirectories": [
-      "/run/media/oriol/Datos/media/video_cache/transcoded"
+      "/run/media/oriol/Datos/media/video_cache/transcoded",
+      "/run/media/oriol/Datos/media/video_cache/thumbnails"
     ]
   }
 }
