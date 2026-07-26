@@ -684,11 +684,15 @@ export async function recheckMediaItem(id) {
 export async function auditCache() {
   const mediaFiles = await scanMediaDirectory();
   const missing = [];
-  const cached = [];
+  const missingThumbnails = [];
+  let cachedCount = 0;
 
   for (const file of mediaFiles) {
     if (allMediaIndex.has(file.id)) {
-      cached.push(file.id);
+      cachedCount++;
+      if (!thumbnailSet.has(file.id)) {
+        missingThumbnails.push({ id: file.id, relativePath: file.relativePath, type: file.type });
+      }
     } else {
       missing.push({ id: file.id, relativePath: file.relativePath, type: file.type });
     }
@@ -696,10 +700,34 @@ export async function auditCache() {
 
   return {
     totalOnDisk: mediaFiles.length,
-    totalCached: cached.length,
+    totalCached: cachedCount,
     totalMissing: missing.length,
     missing,
+    totalMissingThumbnails: missingThumbnails.length,
+    missingThumbnails,
   };
+}
+
+// Lets the Audit view (or anything else) trigger a catch-up outside of server
+// startup — reconciles with disk, extracts GPS/thumbnails/GPX for any new files
+// found, and backfills thumbnails for anything already cached that's missing one.
+// Concurrent calls share the same in-flight run rather than racing each other.
+let rescanPromise = null;
+
+export function isRescanInProgress() {
+  return rescanPromise !== null;
+}
+
+export function rescanForNewFiles() {
+  if (rescanPromise) return rescanPromise;
+  rescanPromise = (async () => {
+    const toProcess = await reconcileWithDisk();
+    await processNewFiles(toProcess);
+    await generateMissingThumbnails();
+    return { processed: toProcess.length };
+  })();
+  rescanPromise.finally(() => { rescanPromise = null; });
+  return rescanPromise;
 }
 
 export function getFullMediaEntry(id) {

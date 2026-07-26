@@ -116,7 +116,9 @@
       "Bash(node -e 'console.log\\(encodeURIComponent\\(process.argv[1]\\)\\)' '2022_GoPro 2016-01-01_GOPR2780')",
       "Bash(curl -s -o /tmp/thumb-before.jpg -D - http://localhost:3001/api/media/__CMDSUB_OUTPUT__/thumbnail)",
       "Read(//run/media/oriol/Datos/media/video_cache/thumbnails/**)",
-      "Bash(rm -f /run/media/oriol/Datos/media/video_cache/thumbnails/__test_photo_thumb_* *)"
+      "Bash(rm -f /run/media/oriol/Datos/media/video_cache/thumbnails/__test_photo_thumb_* *)",
+      "Bash(curl -sf http://localhost:5173)",
+      "Bash(node check-thumbs-filter.js)"
     ],
     "additionalDirectories": [
       "/run/media/oriol/Datos/media/video_cache/transcoded",

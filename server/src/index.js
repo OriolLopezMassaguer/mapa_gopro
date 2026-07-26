@@ -6,7 +6,7 @@ import config from './config.js';
 import mediaRoutes from './routes/videos.js';
 import passesRoutes from './routes/passes.js';
 import recordedTracksRoutes from './routes/recordedTracks.js';
-import { loadCacheIndexes, reconcileWithDisk, processNewFiles, generateMissingThumbnails } from './services/cacheManager.js';
+import { loadCacheIndexes, rescanForNewFiles } from './services/cacheManager.js';
 
 // Log crashes with full stack traces so failures are diagnosable
 process.on('uncaughtException', (err) => {
@@ -67,8 +67,9 @@ app.listen(PORT, async () => {
   console.log('========================================');
   console.log('');
 
-  reconcileWithDisk()
-    .then((toProcess) => processNewFiles(toProcess))
-    .then(() => generateMissingThumbnails())
+  // Goes through the same guarded rescanForNewFiles() the /rescan route uses, so a
+  // manual rescan triggered while startup is still catching up can't stack a second
+  // concurrent video-extraction worker pool on top of this one (OOM risk).
+  rescanForNewFiles()
     .catch(err => console.error('Background cache update error:', err.message));
 });

@@ -170,6 +170,7 @@ export default function TableView({
 
   const filtered = useMemo(() => {
     return items.filter(item => {
+      if (typeFilter === 'media' && item.type !== 'video' && item.type !== 'photo') return false;
       if (typeFilter === 'video' && item.type !== 'video') return false;
       if (typeFilter === 'photo' && item.type !== 'photo') return false;
       if (typeFilter === 'pass' && item.type !== 'pass') return false;
@@ -220,6 +221,7 @@ export default function TableView({
 
   const counts = {
     all: items.length,
+    media: items.filter(i => i.type === 'video' || i.type === 'photo').length,
     video: items.filter(i => i.type === 'video').length,
     photo: items.filter(i => i.type === 'photo').length,
     pass: items.filter(i => i.type === 'pass').length,
@@ -229,6 +231,7 @@ export default function TableView({
 
   const TYPE_FILTERS = [
     { key: 'all',   label: 'All' },
+    { key: 'media', label: 'Media' },
     { key: 'video', label: 'Videos' },
     { key: 'photo', label: 'Photos' },
     { key: 'pass',  label: 'Passes' },

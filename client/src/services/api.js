@@ -22,3 +22,5 @@ export const fetchPlaces = (id) => api.get(`/media/${id}/places`).then(r => r.da
 export const clearPlacesCache = (id) => api.delete(`/media/${id}/places`).then(r => r.data);
 export const fetchPlaybackInfo = (id) => api.get(`/media/${id}/playback-info`).then(r => r.data);
 export const startTranscode = (id) => api.post(`/media/${id}/transcode`).then(r => r.data);
+export const startRescan = () => api.post('/media/rescan').then(r => r.data);
+export const fetchRescanStatus = () => api.get('/media/rescan-status').then(r => r.data);

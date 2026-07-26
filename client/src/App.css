@@ -328,6 +328,9 @@
 .export-btn--video:hover { background: #1d4ed8; }
 .export-btn--photo { background: #d97706; }
 .export-btn--photo:hover { background: #b45309; }
+.export-btn--rescan { background: #0891b2; border: none; cursor: pointer; font: inherit; }
+.export-btn--rescan:hover { background: #0e7490; }
+.export-btn--rescan:disabled { background: #9ca3af; cursor: wait; }
 
 .row-export-btn {
   display: inline-block;

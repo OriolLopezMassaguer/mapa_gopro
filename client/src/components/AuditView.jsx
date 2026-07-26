@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import { fetchAudit } from '../services/api';
+import { useState, useEffect, useRef } from 'react';
+import { fetchAudit, startRescan, fetchRescanStatus } from '../services/api';
+
+const RESCAN_POLL_MS = 3000;
 
 function fmtSize(bytes) {
   if (bytes == null) return '—';
@@ -14,13 +16,39 @@ export default function AuditView() {
   const [sortKey, setSortKey] = useState('relativePath');
   const [sortDir, setSortDir] = useState(1);
   const [filterType, setFilterType] = useState('all');
+  const [rescanning, setRescanning] = useState(false);
+  const pollRef = useRef(null);
 
-  useEffect(() => {
+  const loadAudit = () => {
     setLoading(true);
     fetchAudit()
       .then(data => { setAudit(data); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
+  };
+
+  useEffect(() => {
+    loadAudit();
+    return () => clearTimeout(pollRef.current);
   }, []);
+
+  function handleRescan() {
+    setRescanning(true);
+    startRescan().catch(() => {});
+
+    const poll = () => {
+      fetchRescanStatus()
+        .then(({ inProgress }) => {
+          if (inProgress) {
+            pollRef.current = setTimeout(poll, RESCAN_POLL_MS);
+          } else {
+            setRescanning(false);
+            loadAudit();
+          }
+        })
+        .catch(() => setRescanning(false));
+    };
+    pollRef.current = setTimeout(poll, RESCAN_POLL_MS);
+  }
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir(d => -d);
@@ -28,7 +56,10 @@ export default function AuditView() {
   };
 
   const rows = audit
-    ? [...audit.missing]
+    ? [
+        ...audit.missing.map(r => ({ ...r, reason: 'Not cached' })),
+        ...audit.missingThumbnails.map(r => ({ ...r, reason: 'No thumbnail' })),
+      ]
         .filter(r => filterType === 'all' || r.type === filterType)
         .sort((a, b) => {
           const av = a[sortKey] ?? '';
@@ -49,6 +80,9 @@ export default function AuditView() {
                 <strong>{audit.totalCached}</strong> cached &nbsp;·&nbsp;
                 <strong style={{ color: audit.totalMissing > 0 ? '#f87171' : '#4ade80' }}>
                   {audit.totalMissing} missing
+                </strong> &nbsp;·&nbsp;
+                <strong style={{ color: audit.totalMissingThumbnails > 0 ? '#f87171' : '#4ade80' }}>
+                  {audit.totalMissingThumbnails} missing thumbnails
                 </strong>
               </>
             : null}
@@ -65,6 +99,14 @@ export default function AuditView() {
           ))}
         </div>
         <div className="export-btns">
+          <button
+            className="export-btn export-btn--rescan"
+            onClick={handleRescan}
+            disabled={rescanning}
+            title="Scan for new files and generate any missing GPS/thumbnail/GPX data"
+          >
+            {rescanning ? 'Rescanning…' : '↺ Rescan for new files'}
+          </button>
           <a href="/api/media/export.gpx" download="gopro-tracks.gpx" className="export-btn export-btn--gpx">All GPX</a>
           <a href="/api/media/export.kml" download="gopro-tracks.kml" className="export-btn">All KML</a>
         </div>
@@ -72,9 +114,9 @@ export default function AuditView() {
 
       {error && <div className="error-banner">Error: {error}</div>}
 
-      {!loading && audit?.totalMissing === 0 && (
+      {!loading && audit?.totalMissing === 0 && audit?.totalMissingThumbnails === 0 && (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#4ade80', fontSize: '1.1rem' }}>
-          All media files are cached.
+          All media files are cached, with thumbnails.
         </div>
       )}
 
@@ -85,13 +127,15 @@ export default function AuditView() {
               <tr>
                 <th onClick={() => handleSort('relativePath')} style={{ cursor: 'pointer' }}>Path{arrow('relativePath')}</th>
                 <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>Type{arrow('type')}</th>
+                <th onClick={() => handleSort('reason')} style={{ cursor: 'pointer' }}>Reason{arrow('reason')}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map(r => (
-                <tr key={r.id}>
+                <tr key={`${r.reason}-${r.id}`}>
                   <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{r.relativePath}</td>
                   <td>{r.type}</td>
+                  <td>{r.reason}</td>
                 </tr>
               ))}
             </tbody>

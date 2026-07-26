@@ -2,7 +2,7 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import config from '../config.js';
-import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getAllVideoTracks, getVideoTelemetry, getFullMediaEntry, getMediaFilePath, getMediaType, getThumbnailPath, recheckMediaItem, auditCache } from '../services/cacheManager.js';
+import { getMediaItems, getAllMediaItems, getMediaItemsForExport, getAllVideoTracks, getVideoTelemetry, getFullMediaEntry, getMediaFilePath, getMediaType, getThumbnailPath, recheckMediaItem, auditCache, rescanForNewFiles, isRescanInProgress } from '../services/cacheManager.js';
 import { generateKml } from '../services/kmlExporter.js';
 import { writeGpxFile } from '../services/gpxExporter.js';
 import { streamVideo } from '../services/videoStreamer.js';
@@ -22,9 +22,23 @@ router.get('/all', (req, res) => {
   res.json(getAllMediaItems());
 });
 
-// GET /api/media/audit — compare disk vs cache, report missing entries
+// GET /api/media/audit — compare disk vs cache, report missing entries and thumbnails
 router.get('/audit', async (req, res) => {
   res.json(await auditCache());
+});
+
+// POST /api/media/rescan — scan disk for new files and extract GPS/thumbnails/GPX for
+// them, and backfill thumbnails for anything already cached that's missing one. Runs
+// in the background; poll /rescan-status (or /audit) to see when it's done.
+router.post('/rescan', (req, res) => {
+  if (isRescanInProgress()) return res.json({ status: 'already-running' });
+  rescanForNewFiles().catch(err => console.error('Rescan error:', err.message));
+  res.json({ status: 'started' });
+});
+
+// GET /api/media/rescan-status — whether a rescan is currently running
+router.get('/rescan-status', (req, res) => {
+  res.json({ inProgress: isRescanInProgress() });
 });
 
 // GET /api/media/export.kml — download all GPS tracks as KML
