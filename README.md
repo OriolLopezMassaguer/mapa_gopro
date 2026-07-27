@@ -1,4 +1,4 @@
-# mapa_gopro
+# GoPro videos map server
 
 Local web app for visualizing GoPro footage and photos on an interactive map. It scans a NAS or local directory for GoPro videos and photos, extracts embedded GPS telemetry, generates thumbnails, and displays everything on a Leaflet map with rich filtering and KML export.
 
